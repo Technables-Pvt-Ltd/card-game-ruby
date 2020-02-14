@@ -1,25 +1,29 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import { connect } from 'react-redux';
+import { Switch, Route } from 'react-router-dom';
+import Aux from './hoc/_Aux';
+import LazyLoader from './components/controls/lazyloader'
+import { ToastContainer } from 'react-toastify'
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Aux>
+      <Suspense fallback={<LazyLoader />}>
+        <Switch>
+          <React.Fragment>
+            <div className="container">
+              <div class="logo-wrapper">
+                <img src={logo} className="logo" alt="Dungeon Myehm" />
+              </div>
+
+              <ToastContainer />
+            </div>
+          </React.Fragment>
+        </Switch>
+      </Suspense>
+    </Aux>
   );
 }
 
