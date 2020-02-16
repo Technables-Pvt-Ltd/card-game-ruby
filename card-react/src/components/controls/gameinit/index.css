@@ -1,0 +1,11 @@
+
+.card-game-wrapper {
+    background-color: #e2e2e2;
+    border: 1px solid #ececec;
+    padding: 30px 20px;
+    border-radius: 12px;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
