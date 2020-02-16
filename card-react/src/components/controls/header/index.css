@@ -1,0 +1,16 @@
+.logo-container img{
+    cursor: pointer;
+}
+
+.logo-wrapper {
+    margin-top: 20px;
+    align-items: center;
+  }
+  
+  .logo-wrapper .row {
+    align-items: center;
+  }
+  
+  .logo-wrapper .logo {
+    height: 80px;
+  }

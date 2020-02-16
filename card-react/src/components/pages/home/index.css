@@ -1,0 +1,38 @@
+.sfFormWrapper {
+    margin-top: 20px;
+}
+
+.card-info {
+    margin-top: 20px;
+}
+
+.card-info p {
+    max-width: 100%;
+}
+
+.card-title {
+    text-transform: capitalize;
+}
+
+.card-instructions {
+    font-size: 13px;
+}
+
+li.list-group-item-flush {
+    border: 0px;
+}
+
+.card-game-wrapper {
+    background-color: #e2e2e2;
+    border: 1px solid #ececec;
+    padding: 30px 20px;
+    border-radius: 12px;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.btnSubmit {
+    margin-top: 10px;
+}
