@@ -37,7 +37,7 @@ export class GameInit extends Component {
         //var response =
         //get available decks
         const items = [
-            { id: 4, name: "nick" },
+            { id: 4, name: "<span class='spn-class'>chandra </span>" },
             { id: 10, name: "dave" },
             { id: 2, name: "zac" },
         ]
