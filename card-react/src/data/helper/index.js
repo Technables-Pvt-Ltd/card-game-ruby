@@ -18,3 +18,10 @@ export function replaceParam(pathRegex, params) {
     })
         .join('/');
 }
+
+/*
+    Get random value from an array
+*/
+export function GetRandom(array) {
+    return array[Math.floor((Math.random() * array.length))];
+}

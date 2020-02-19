@@ -6,6 +6,8 @@ import Swal from 'sweetalert2'
 import shortid from 'shortid'
 import { PUBNUB_PUBLISH_KEY, PUBNUB_SUBSCRIBE_KEY } from '../../../data/constants/pubnub';
 import { gameactionlist } from '../../../data/actionlist';
+import { GetRandom } from '../../../data/helper';
+import GameStatus from './gamestatus'
 
 export class GameInit extends Component {
 
@@ -21,7 +23,7 @@ export class GameInit extends Component {
             subscribeKey: PUBNUB_SUBSCRIBE_KEY
         });
 
-        this.state = this.props.cardgame;
+        this.setState({ cardgame: this.props.cardgame });
         this.pubnub.init(this);
     }
 
@@ -34,23 +36,34 @@ export class GameInit extends Component {
             withPresence: true
         });
 
-        //var response =
-        //get available decks
-        const items = [
-            { id: 4, name: "<span class='spn-class'>chandra </span>" },
-            { id: 10, name: "dave" },
-            { id: 2, name: "zac" },
+        const decks = [
+            { id: 1, name: "Barbarian" },
+            { id: 2, name: "Paladin" },
+            { id: 3, name: "Rogue" },
+            { id: 4, name: "Wizard" },
+
         ]
 
-        const inputOptions = new Map
-        items.forEach(item => inputOptions.set(item.id, item.name))
+        const firstDeck = GetRandom(decks);
 
+        //var response =
+        //get available decks
+
+        const cardHtmlArray = decks.reduce(function (newCards, card) {
+            let cardHtml = `<div class='span-card-wrapper'><span class='spn-card-title'>${card.name} </span></div>`
+            newCards.push({ id: card.id, cardHtml: cardHtml });
+            return newCards;
+        }, []);
+
+
+        const inputOptions = new Map
+        cardHtmlArray.forEach(item => inputOptions.set(item.id, item.cardHtml));
         let deckID = null;
         await Swal.fire({
             title: '<strong>Choose Your Deck</strong>',
             input: 'radio',
             inputOptions: inputOptions,
-            inputValue: 10,
+            inputValue: firstDeck.id,
             inputValidator: function (value) {
                 return new Promise(function (resolve, reject) {
                     if (value !== '') {
@@ -66,18 +79,42 @@ export class GameInit extends Component {
             showCancelButton: false
         }).then((result) => {
             if (result.value) {
-                // Swal.fire({
-                //     type: 'success',
-                //     html: 'you selected: ' + result.value
-                // });
 
                 deckID = result.value;
+
             }
 
         });
 
-        if (deckID)
-            Swal.fire({ type: 'success', html: "You have selected: " + deckID });
+        if (deckID) {
+            //set roomid to reducer
+            //set deckid
+            //show confirmation form
+
+            let swalHtml = ` <div className="game-room">
+                                <div className="row room-header">
+                                    <span>Room ID: ${roomId}</span>
+                                </div>
+                                <div class="room-deck-container>
+                                    <span class="deck-title">Decks: </span>
+                                    <ul class='list-group>
+                                        <li class='list-group-item>1. </li>
+                                    </ul>
+                                </div>
+                            </div>`;
+
+
+            Swal.fire({
+                title: `Your game room is created.`,
+                icon: 'success',
+                html: swalHtml,
+                text: roomId,
+                position: 'top-center',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+
+            });
+        }
 
 
         const { dispatch } = this.props;

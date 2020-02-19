@@ -12,5 +12,9 @@
 
 
 .spn-class {
-    
+    padding: 10px;
+    height: 300px;
+    border: 1px solid #ececec;
+    border-radius: 5px;
+    background-color: aqua;
 }

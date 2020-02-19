@@ -11,7 +11,6 @@ export const initialState = {
 const cardgame = (state = initialState, action) => {
     switch (action.type) {
         case PUBNUB_INIT:
-            debugger;
             return {
                 ...state,
                 roomId: action.msg.roomId,
