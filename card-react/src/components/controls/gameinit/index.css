@@ -28,4 +28,24 @@
     margin: 10px auto;
     font-weight: 500;
 }
+i.success {
+    color: #20a527;
+}
+
+i.pending {
+    color: #d06464;
+}
+
+.game-status-list-item i {
+    font-size: 20px;
+    margin: 0 10px;
+}
+
+.game-status-list-item span {
+    font-size: 16px;
+    float: left;
+    width: 120px;
+}
+
+
 

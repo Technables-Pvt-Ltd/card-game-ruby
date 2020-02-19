@@ -34,7 +34,7 @@ export class Home extends Component {
                                     <li className="list-group-item">3. 4 players can participate in a game.</li>
                                     <li className="list-group-item">4. Once player count is at least 2, user can start the game</li>
                                     <li className="list-group-item">5. At the start of game:
-                                        <ul class="list-group list-group-flush">
+                                        <ul className="list-group list-group-flush">
                                             <li className="list-group-item">a. the players decks are shuffled and placed in the players "draw pile"</li>
                                             <li className="list-group-item">b. 5 cards are pulled from the "draw pile" and placed in the Players "hand"</li>
 

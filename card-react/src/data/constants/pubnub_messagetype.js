@@ -1,0 +1,2 @@
+export const PUBNUB_JOIN = "PUBNUB_JOIN";
+export const PUBNUB_DECKSELECT = "PUBNUB_DECKSELECT";
