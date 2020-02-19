@@ -18,3 +18,14 @@
     border-radius: 5px;
     background-color: aqua;
 }
+
+.room-deck-container {
+    padding: 20px;
+    margin: 0px !important;
+}
+
+.room-deck-container .deck-title {
+    margin: 10px auto;
+    font-weight: 500;
+}
+

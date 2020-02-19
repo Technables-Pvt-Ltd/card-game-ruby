@@ -23,7 +23,7 @@ export class GameInit extends Component {
             subscribeKey: PUBNUB_SUBSCRIBE_KEY
         });
 
-        this.setState({ cardgame: this.props.cardgame });
+        this.state = { cardgame: this.props.cardgame };
         this.pubnub.init(this);
     }
 
@@ -95,10 +95,15 @@ export class GameInit extends Component {
                                 <div className="row room-header">
                                     <span>Room ID: ${roomId}</span>
                                 </div>
-                                <div class="room-deck-container>
-                                    <span class="deck-title">Decks: </span>
-                                    <ul class='list-group>
-                                        <li class='list-group-item>1. </li>
+                                <div class="room-deck-container row">
+                                    <span class="deck-title col-12 text-left">Decks: </span>
+                                    <ul class='list-group list-group-flush'>
+                                        <li class='list-group-item '>
+                                            <div class='game-status-list-item'>
+                                                <span> 1. Barbariain </span>
+                                                <i class="fa fa-check"></i>
+                                            </div>
+                                        </li>
                                     </ul>
                                 </div>
                             </div>`;
