@@ -181,6 +181,7 @@ export class GameInit extends Component {
         this.pubnub.hereNow({
             channels: [this.lobbyChannel],
         }).then((response) => {
+            debugger;
             if (response.totalOccupancy < 4) {
                 this.pubnub.subscribe({
                     channels: [this.lobbyChannel],
@@ -285,6 +286,9 @@ export class GameInit extends Component {
                     type: PUBNUB_DECKSELECT
                 },
                 channel: this.lobbyChannel
+            },
+            (status, response)=> {
+                debugger;
             });
 
         }
