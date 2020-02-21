@@ -1,0 +1,5 @@
+{
+    "ruby.format": "rufo",
+    
+    "rufo.useBundler": false
+}

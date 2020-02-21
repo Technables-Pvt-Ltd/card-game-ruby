@@ -16,7 +16,7 @@ DECK_MASTER = [
 	},
 	{
 		"id": 4,
-        "name": "Oriax: The Clever"
+        "name": "Oriax: The Clever",
         "class": "card-oriax"
 	}
 ]
