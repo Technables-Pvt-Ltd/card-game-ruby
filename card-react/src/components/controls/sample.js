@@ -21,7 +21,6 @@ class Sample extends Component {
         this.pubnub.hereNow({
             channels: ['channel1'],
         }).then((response) => {
-            debugger;
             this.setState({ occupancy: response.totalOccupancy })
         });
 

@@ -5,6 +5,8 @@ import { Switch, Route } from 'react-router-dom';
 import Aux from './hoc/_Aux';
 import LazyLoader from './components/controls/lazyloader'
 import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css';
+
 
 import Header from './components/controls/header'
 import { defaultRoute } from './routes';

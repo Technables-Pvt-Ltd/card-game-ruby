@@ -7,7 +7,9 @@ import shortid from 'shortid'
 import { PUBNUB_PUBLISH_KEY, PUBNUB_SUBSCRIBE_KEY } from '../../../data/constants/pubnub';
 import { gameactionlist } from '../../../data/actionlist';
 import { GetRandom } from '../../../data/helper';
-import { PUBNUB_JOIN, PUBNUB_DECKSELECT } from '../../../data/constants/pubnub_messagetype';
+import { PUBNUB_JOIN, PUBNUB_DECKSELECT, PUBNUB_MESSAGE_BROADCAST } from '../../../data/constants/pubnub_messagetype';
+import { TOAST_SUCCESS } from '../../../data/constants/toastmessagetype';
+import { ShowMessage } from '../../../data/message/showMessage';
 
 export class GameInit extends Component {
 
@@ -17,10 +19,8 @@ export class GameInit extends Component {
         this.initPubNub();
         this.roomId = null;
         this.lobbyChannel = null;
-
         this.gameChannel = null;
-
-        // this.state = { cardgame: this.props.cardgame };
+        //this.state = { cardgame: this.props.cardgame };
 
 
 
@@ -32,7 +32,6 @@ export class GameInit extends Component {
             subscribeKey: PUBNUB_SUBSCRIBE_KEY
         });
         this.state = {
-
         }
         this.pubnub.init(this);
     }
@@ -44,158 +43,13 @@ export class GameInit extends Component {
     }
 
     componentDidUpdate() {
-        //this.pubnub.subscribe({ channels: [this.lobbyChannel], withPresence: true });
-        //debugger;
-        if (this.lobbyChannel !== null) {
-            this.pubnub.hereNow({
-                channels: [this.lobbyChannel]
-            }).then((response) => {
-                console.log(response);
-            });
 
+        if (this.lobbyChannel !== null) {
             this.pubnub.getMessage(this.lobbyChannel, msg => {
-                this.pubnub.hereNow({
-                    channels: [this.lobbyChannel]
-                }).then((response) => {
-                    alert(response.totalOccupancy);
-                });
+
                 this.handlePubNubMessage(msg.message);
             });
         }
-
-
-    }
-
-
-    handlePubNubMessage = (msg) => {
-        switch (msg.type) {
-            case PUBNUB_JOIN:
-                this.gameChannel = 'dungeonmayhem-game--' + this.roomId;
-
-                this.pubnub.subscribe({
-                    channels: [this.gameChannel]
-
-                });
-                break;
-            case PUBNUB_DECKSELECT:
-                this.displayRoomStatusModal(this.roomId, msg.isRoomCreator);
-                break;
-            default:
-                break;
-        }
-    }
-
-    onPressCreate = async (e) => {
-
-        this.roomId = shortid.generate().substring(0, 6);
-        this.lobbyChannel = 'dungeonmayhem-lobby--' + this.roomId;
-
-
-        this.pubnub.subscribe({
-            channels: [this.lobbyChannel],
-            withPresence: true
-        });
-
-        //this.pubnub.publish({message: 'namaste',channel: this.lobbyChannel});
-
-        const decks = [
-            { id: 1, name: "Barbarian" },
-            { id: 2, name: "Paladin" },
-            { id: 3, name: "Rogue" },
-            { id: 4, name: "Wizard" },
-
-        ]
-
-        const firstDeck = GetRandom(decks);
-
-        //var response =
-        //get available decks
-
-        const cardHtmlArray = decks.reduce(function (newCards, card) {
-            let cardHtml = `<div class='span-card-wrapper'><span class='spn-card-title'>${card.name} </span></div>`
-            newCards.push({ id: card.id, cardHtml: cardHtml });
-            return newCards;
-        }, []);
-
-
-        const inputOptions = new Map()
-        cardHtmlArray.forEach(item => inputOptions.set(item.id, item.cardHtml));
-        let deckID = null;
-        await Swal.fire({
-            title: '<strong>Choose Your Deck</strong>',
-            input: 'radio',
-            inputOptions: inputOptions,
-            inputValue: firstDeck.id,
-            inputValidator: function (value) {
-                return new Promise(function (resolve, reject) {
-                    if (value !== '') {
-                        resolve();
-                    } else {
-                        resolve('You need to select a deck');
-                    }
-                });
-            },
-            focusConfirm: false,
-            confirmButtonText:
-                'Select',
-            showCancelButton: false
-        }).then((result) => {
-            if (result.value) {
-
-                deckID = result.value;
-
-            }
-
-        });
-
-        if (deckID) {
-            //set roomid to reducer
-            //set deckid
-            //show confirmation form
-            debugger;
-            this.pubnub.publish({
-                message: {
-                    notRoomCreator: false,
-                    type: PUBNUB_JOIN
-                },
-                channel: this.lobbyChannel
-            });
-            this.setState({ isRoomCreator: true })
-            this.displayRoomStatusModal(this.roomId, true);
-
-        }
-
-
-        const { dispatch } = this.props;
-
-
-        dispatch(gameactionlist.pubnubint({
-            roomId: this.roomId, lobbyChannel: this.lobbyChannel
-        }));
-
-    }
-
-    onPressJoin = async (e) => {
-        Swal.fire({
-            title: '<strong>Join the game room</strong>',
-            position: 'top-center',
-            input: 'text',
-            allowOutsideClick: false,
-            inputPlaceholder: 'enter the room id',
-            showCancelButton: true,
-            confirmButtonText: 'JOIN',
-            customClass: {
-                heightAuto: false,
-                popup: 'popup-class',
-                confirmButton: 'join-button-class ',
-                cancelButton: 'join-button-class'
-            }
-        }).then((result) => {
-            // Check if the user typed a value in the input field
-            if (result.value) {
-                this.joinRoom(result.value);
-            }
-        })
     }
 
     subscribeChannel = (channel) => {
@@ -205,54 +59,43 @@ export class GameInit extends Component {
         });
     }
 
-    joinRoom = async (value) => {
-        this.roomId = value;
-
-
-        this.lobbyChannel = 'dungeonmayhem-lobby--' + this.roomId;
-
-
-
-        // Check the number of people in the channel
-        this.pubnub.hereNow({
-            channels: [this.lobbyChannel],
-        }).then((response) => {
-            if (response.totalOccupancy < 4) {
-
-                this.subscribeChannel(this.lobbyChannel);
-
-
-                this.showChooseDeckOption();
-                this.setState({ isRoomCreator: false })
-                this.pubnub.publish({
-                    message: {
-                        notRoomCreator: true,
-                        type: PUBNUB_JOIN
-                    },
-                    channel: this.lobbyChannel
-                });
-            }
-            else {
-                // Game in progress
-                Swal.fire({
-                    position: 'top',
-                    allowOutsideClick: false,
-                    title: 'Error',
-                    text: 'Game in progress. Try another room.',
-                    width: 275,
-                    padding: '0.7em',
-                    customClass: {
-                        heightAuto: false,
-                        title: 'title-class',
-                        popup: 'popup-class',
-                        confirmButton: 'button-class'
-                    }
-                })
-            }
-        }).catch((error) => {
-            debugger;
-            console.log(error);
+    publishMessage = (channel, msg) => {
+        this.pubnub.publish({
+            message: msg,
+            channel: channel
         });
+
+        this.setState({ publishMsg: true });
+    }
+
+    generateMessageObj = (type, msg) => {
+        return {
+            type, message: msg
+        }
+    }
+
+
+    handlePubNubMessage = (msg) => {
+        if (msg.type) {
+            switch (msg.type) {
+                case PUBNUB_JOIN:
+                    this.gameChannel = 'dungeonmayhem-game--' + this.roomId;
+                    this.subscribeChannel(this.gameChannel);
+
+                    let message = this.generateMessageObj(PUBNUB_MESSAGE_BROADCAST, { data: "New Player Joined", type: TOAST_SUCCESS })
+                    this.publishMessage(this.lobbyChannel, message)
+                    break;
+                case PUBNUB_DECKSELECT:
+                    this.displayRoomStatusModal(this.roomId, msg.isRoomCreator);
+                    break;
+
+                case PUBNUB_MESSAGE_BROADCAST:
+                    ShowMessage(msg.message.type, msg.message.data);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     showChooseDeckOption = async () => {
@@ -261,7 +104,6 @@ export class GameInit extends Component {
             { id: 2, name: "Paladin" },
             { id: 3, name: "Rogue" },
             { id: 4, name: "Wizard" },
-
         ]
 
         const firstDeck = GetRandom(decks);
@@ -318,12 +160,10 @@ export class GameInit extends Component {
                 channel: this.lobbyChannel
             },
                 (status, response) => {
-                    debugger;
                 });
-                this.setState({ isDeckSelcted: true })
+            this.setState({ isDeckSelcted: true })
         }
     }
-
 
     displayRoomStatusModal = (roomId, isRoomCreator) => {
 
@@ -374,6 +214,175 @@ export class GameInit extends Component {
 
         });
     }
+
+    getDeckList = () => {
+
+        const decks = [
+            { id: 1, name: "Barbarian" },
+            { id: 2, name: "Paladin" },
+            { id: 3, name: "Rogue" },
+            { id: 4, name: "Wizard" },
+
+        ]
+
+        return decks;
+    }
+
+    getRandomDeck = () => {
+        const decks = this.getDeckList;
+        const firstDeck = GetRandom(decks);
+
+        return firstDeck;
+    }
+
+    getDeckListHtml = () => {
+
+        const decks = this.getDeckList;
+
+        const cardHtmlArray = decks.reduce(function (newCards, card) {
+            let cardHtml = `<div class='span-card-wrapper'><span class='spn-card-title'>${card.name} </span></div>`
+            newCards.push({ id: card.id, cardHtml: cardHtml });
+            return newCards;
+        }, []);
+
+        const inputOptions = new Map()
+        cardHtmlArray.forEach(item => inputOptions.set(item.id, item.cardHtml));
+        return inputOptions;
+    }
+
+    onPressCreate = async (e) => {
+
+        this.roomId = shortid.generate().substring(0, 6);
+        this.lobbyChannel = 'dungeonmayhem-lobby--' + this.roomId;
+
+        this.subscribeChannel(this.lobbyChannel);
+        const firstDeck = this.getRandomDeck();
+        let inputOptions = this.getDeckListHtml();
+        
+        let deckID = null;
+        await Swal.fire({
+            title: '<strong>Choose Your Deck</strong>',
+            input: 'radio',
+            inputOptions: inputOptions,
+            inputValue: firstDeck.id,
+            inputValidator: function (value) {
+                return new Promise(function (resolve, reject) {
+                    if (value !== '') {
+                        resolve();
+                    } else {
+                        resolve('You need to select a deck');
+                    }
+                });
+            },
+            focusConfirm: false,
+            confirmButtonText:
+                'Select',
+            showCancelButton: false
+        }).then((result) => {
+            if (result.value) {
+                deckID = result.value;
+            }
+        });
+
+        if (deckID) {
+            //set roomid to reducer
+            //set deckid
+            //show confirmation form
+            this.pubnub.publish({
+                message: {
+                    notRoomCreator: false,
+                    type: PUBNUB_JOIN
+                },
+                channel: this.lobbyChannel
+            });
+            this.setState({ isRoomCreator: true })
+            this.displayRoomStatusModal(this.roomId, true);
+
+        }
+
+
+        const { dispatch } = this.props;
+
+
+        dispatch(gameactionlist.pubnubint({
+            roomId: this.roomId, lobbyChannel: this.lobbyChannel
+        }));
+
+    }
+
+    onPressJoin = async (e) => {
+        Swal.fire({
+            title: '<strong>Join the game room</strong>',
+            position: 'top-center',
+            input: 'text',
+            allowOutsideClick: false,
+            inputPlaceholder: 'enter the room id',
+            showCancelButton: true,
+            confirmButtonText: 'JOIN',
+            customClass: {
+                heightAuto: false,
+                popup: 'popup-class',
+                confirmButton: 'join-button-class ',
+                cancelButton: 'join-button-class'
+            }
+        }).then((result) => {
+            // Check if the user typed a value in the input field
+            if (result.value) {
+                this.joinRoom(result.value);
+            }
+        })
+    }
+
+    joinRoom = async (value) => {
+        this.roomId = value;
+
+
+        this.lobbyChannel = 'dungeonmayhem-lobby--' + this.roomId;
+
+
+
+        // Check the number of people in the channel
+        this.pubnub.hereNow({
+            channels: [this.lobbyChannel],
+        }).then((response) => {
+            if (response.totalOccupancy < 4) {
+
+                this.subscribeChannel(this.lobbyChannel);
+
+
+                this.showChooseDeckOption();
+                this.setState({ isRoomCreator: false })
+                this.pubnub.publish({
+                    message: {
+                        notRoomCreator: true,
+                        type: PUBNUB_JOIN
+                    },
+                    channel: this.lobbyChannel
+                });
+            }
+            else {
+                // Game in progress
+                Swal.fire({
+                    position: 'top',
+                    allowOutsideClick: false,
+                    title: 'Error',
+                    text: 'Game in progress. Try another room.',
+                    width: 275,
+                    padding: '0.7em',
+                    customClass: {
+                        heightAuto: false,
+                        title: 'title-class',
+                        popup: 'popup-class',
+                        confirmButton: 'button-class'
+                    }
+                })
+            }
+        }).catch((error) => {
+            console.log(error);
+        });
+    }
+
+
 
     render() {
         return (
