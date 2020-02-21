@@ -13,16 +13,28 @@ export class GameInit extends Component {
 
     constructor(props) {
         super(props);
+
+        this.initPubNub();
+        this.roomId = null;
+        this.lobbyChannel = null;
+
+        this.gameChannel = null;
+
+        // this.state = { cardgame: this.props.cardgame };
+
+
+
+    }
+
+    initPubNub = () => {
+        this.pubnub = new PubNubReact({
+            publishKey: PUBNUB_PUBLISH_KEY,
+            subscribeKey: PUBNUB_SUBSCRIBE_KEY
+        });
         this.state = {
 
         }
-        this.state = { cardgame: this.props.cardgame };
-
-        this.lobbyChannel = null;
-        this.roomId = null;
-        this.gameChannel = null;
-        this.initPubNub();
-
+        this.pubnub.init(this);
     }
 
     componentWillUnmount() {
@@ -31,16 +43,29 @@ export class GameInit extends Component {
         });
     }
 
-
-
     componentDidUpdate() {
+        //this.pubnub.subscribe({ channels: [this.lobbyChannel], withPresence: true });
+        //debugger;
         if (this.lobbyChannel !== null) {
-            this.pubnub.getMessage(this.lobbyChannel, (msg) => {
+            this.pubnub.hereNow({
+                channels: [this.lobbyChannel]
+            }).then((response) => {
+                console.log(response);
+            });
 
+            this.pubnub.getMessage(this.lobbyChannel, msg => {
+                this.pubnub.hereNow({
+                    channels: [this.lobbyChannel]
+                }).then((response) => {
+                    alert(response.totalOccupancy);
+                });
                 this.handlePubNubMessage(msg.message);
             });
         }
+
+
     }
+
 
     handlePubNubMessage = (msg) => {
         switch (msg.type) {
@@ -51,10 +76,8 @@ export class GameInit extends Component {
                     channels: [this.gameChannel]
 
                 });
-                //this.displayRoomStatusModal(this.roomId);
                 break;
             case PUBNUB_DECKSELECT:
-                alert(1);
                 this.displayRoomStatusModal(this.roomId, msg.isRoomCreator);
                 break;
             default:
@@ -62,24 +85,18 @@ export class GameInit extends Component {
         }
     }
 
-    initPubNub = () => {
-        this.pubnub = new PubNubReact({
-            publishKey: PUBNUB_PUBLISH_KEY,
-            subscribeKey: PUBNUB_SUBSCRIBE_KEY
-        });
-
-        this.pubnub.init(this);
-    }
-
     onPressCreate = async (e) => {
+
         this.roomId = shortid.generate().substring(0, 6);
         this.lobbyChannel = 'dungeonmayhem-lobby--' + this.roomId;
 
+
         this.pubnub.subscribe({
             channels: [this.lobbyChannel],
-            withPresence: true,
-            message: this.handleMessage.bind(this)
+            withPresence: true
         });
+
+        //this.pubnub.publish({message: 'namaste',channel: this.lobbyChannel});
 
         const decks = [
             { id: 1, name: "Barbarian" },
@@ -135,6 +152,15 @@ export class GameInit extends Component {
             //set roomid to reducer
             //set deckid
             //show confirmation form
+            debugger;
+            this.pubnub.publish({
+                message: {
+                    notRoomCreator: false,
+                    type: PUBNUB_JOIN
+                },
+                channel: this.lobbyChannel
+            });
+            this.setState({ isRoomCreator: true })
             this.displayRoomStatusModal(this.roomId, true);
 
         }
@@ -146,7 +172,6 @@ export class GameInit extends Component {
         dispatch(gameactionlist.pubnubint({
             roomId: this.roomId, lobbyChannel: this.lobbyChannel
         }));
-
 
     }
 
@@ -173,24 +198,32 @@ export class GameInit extends Component {
         })
     }
 
+    subscribeChannel = (channel) => {
+        this.pubnub.subscribe({
+            channels: [channel],
+            withPresence: true
+        });
+    }
+
     joinRoom = async (value) => {
         this.roomId = value;
+
+
         this.lobbyChannel = 'dungeonmayhem-lobby--' + this.roomId;
+
+
 
         // Check the number of people in the channel
         this.pubnub.hereNow({
             channels: [this.lobbyChannel],
         }).then((response) => {
-            debugger;
             if (response.totalOccupancy < 4) {
-                this.pubnub.subscribe({
-                    channels: [this.lobbyChannel],
-                    withPresence: true
-                });
+
+                this.subscribeChannel(this.lobbyChannel);
 
 
                 this.showChooseDeckOption();
-
+                this.setState({ isRoomCreator: false })
                 this.pubnub.publish({
                     message: {
                         notRoomCreator: true,
@@ -217,12 +250,9 @@ export class GameInit extends Component {
                 })
             }
         }).catch((error) => {
+            debugger;
             console.log(error);
         });
-    }
-
-    handleMessage = (msg) => {
-        debugger;
     }
 
     showChooseDeckOption = async () => {
@@ -287,10 +317,10 @@ export class GameInit extends Component {
                 },
                 channel: this.lobbyChannel
             },
-            (status, response)=> {
-                debugger;
-            });
-
+                (status, response) => {
+                    debugger;
+                });
+                this.setState({ isDeckSelcted: true })
         }
     }
 

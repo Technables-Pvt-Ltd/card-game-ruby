@@ -8,7 +8,6 @@ import { ToastContainer } from 'react-toastify'
 
 import Header from './components/controls/header'
 import { defaultRoute } from './routes';
-import Sample from './components/controls/sample'
 
 
 
@@ -34,7 +33,7 @@ class App extends React.Component {
             <React.Fragment>
               <div className="container">
                 <Header />
-                <Sample/>
+                
                 {dRoute}
                 <ToastContainer />
               </div>
