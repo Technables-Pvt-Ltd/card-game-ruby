@@ -1,46 +1,32 @@
-import Swal from "sweetalert2";
+import EndPoints from '../endpoints';
+import axios from 'axios'
 
-export function joinRoom (value) {
-    const roomId = value;
-    const lobbyChannel = 'dungeonmayhem-lobby--' + roomId;
+export const services = {
+  initdeck
+}
 
-    // Check the number of people in the channel
-    this.pubnub.hereNow({
-      channels: [lobbyChannel],
-    }).then((response) => {
-      if (response.totalOccupancy < 4) {
-        this.pubnub.subscribe({
-          channels: [this.lobbyChannel],
-          withPresence: true
-        });
+const deckEndPoint = EndPoints.DECKAPI;
 
-        
+function getHeader() {
 
-        this.pubnub.publish({
-          message: {
-            notRoomCreator: true,
-          },
-          channel: this.lobbyChannel
-        });
+  let axiosConfig = {
+    headers: {
+      get: {
+        "Content-Type": "application/json;charset=UTF-8",
+        "Access-Control-Allow-Origin": "*"
       }
-      else {
-        // Game in progress
-        Swal.fire({
-          position: 'top',
-          allowOutsideClick: false,
-          title: 'Error',
-          text: 'Game in progress. Try another room.',
-          width: 275,
-          padding: '0.7em',
-          customClass: {
-            heightAuto: false,
-            title: 'title-class',
-            popup: 'popup-class',
-            confirmButton: 'button-class'
-          }
-        })
-      }
-    }).catch((error) => {
-      console.log(error);
-    });
-  }
+    }
+  };
+
+  return axiosConfig;
+}
+
+async function initdeck(obj) {
+
+  let axiosConfig = getHeader();
+
+  var response = null;
+  response = await axios.get(deckEndPoint.INIT_DECK, obj, axiosConfig);
+
+  return response;
+}

@@ -215,6 +215,15 @@ export class GameInit extends Component {
         });
     }
 
+    getDeckMasterList = () =>{
+        let paramObj = {};
+        debugger;
+        gameactionlist.deckinit(paramObj, async result => {
+            debugger;
+        })
+        
+    }
+
     getDeckList = () => {
 
         const decks = [
@@ -229,7 +238,7 @@ export class GameInit extends Component {
     }
 
     getRandomDeck = () => {
-        const decks = this.getDeckList;
+        const decks = this.getDeckList();
         const firstDeck = GetRandom(decks);
 
         return firstDeck;
@@ -237,7 +246,7 @@ export class GameInit extends Component {
 
     getDeckListHtml = () => {
 
-        const decks = this.getDeckList;
+        const decks = this.getDeckList();;
 
         const cardHtmlArray = decks.reduce(function (newCards, card) {
             let cardHtml = `<div class='span-card-wrapper'><span class='spn-card-title'>${card.name} </span></div>`
@@ -251,6 +260,8 @@ export class GameInit extends Component {
     }
 
     onPressCreate = async (e) => {
+
+        this.getDeckMasterList();
 
         this.roomId = shortid.generate().substring(0, 6);
         this.lobbyChannel = 'dungeonmayhem-lobby--' + this.roomId;
