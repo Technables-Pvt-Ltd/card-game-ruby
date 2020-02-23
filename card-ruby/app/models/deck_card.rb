@@ -1,0 +1,2 @@
+class DeckCard < ApplicationRecord
+end

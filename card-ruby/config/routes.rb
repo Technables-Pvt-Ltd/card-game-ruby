@@ -4,7 +4,10 @@ Rails.application.routes.draw do
 
 
   namespace :v1, defaults: {format: 'json'} do
+    get "api/view", to: 'api#view'
+    get "api/add", to: 'api#add'
     get "deck", to: 'apideck#index'
+    get "deck/addgamedeck", to: 'apideck#addGameDeck'
     get "deck/init", to: 'apideck#init'
     get "deck/initgame", to: 'apideck#initgame'
     get "deck/getdeck", to: 'apideck#getgamedeck'

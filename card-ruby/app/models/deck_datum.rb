@@ -1,0 +1,2 @@
+class DeckDatum < ApplicationRecord
+end
