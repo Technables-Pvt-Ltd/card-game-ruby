@@ -23,12 +23,9 @@ export class GameInit extends Component {
         this.lobbyChannel = null;
         this.gameChannel = null;
         this.masterdeck = [];
-        this.getDeckList();
+        this.getDeckMasterList();
         //this.setState({masterdeck: []});
         //  this.state = { masterdeck: [] };
-
-
-
     }
 
     initPubNub = () => {
@@ -42,9 +39,7 @@ export class GameInit extends Component {
     }
 
     componentWillUnmount() {
-        this.pubnub.unsubscribe({
-            channels: [this.lobbyChannel, this.gameChannel]
-        });
+        this.unsubscribe();
     }
 
     componentDidUpdate() {
@@ -57,6 +52,12 @@ export class GameInit extends Component {
         }
     }
 
+    unsubscribe = () => {
+        this.pubnub.unsubscribe({
+            channels: [this.lobbyChannel, this.gameChannel]
+        });
+    }
+
     subscribeChannel = (channel) => {
         this.pubnub.subscribe({
             channels: [channel],
@@ -65,7 +66,6 @@ export class GameInit extends Component {
     }
 
     publishMessage = (channel, msg) => {
-        debugger;
         this.pubnub.publish({
             message: msg,
             channel: channel
@@ -105,71 +105,77 @@ export class GameInit extends Component {
     }
 
     showChooseDeckOption = async () => {
-        const decks = [
-            { id: 1, name: "Barbarian" },
-            { id: 2, name: "Paladin" },
-            { id: 3, name: "Rogue" },
-            { id: 4, name: "Wizard" },
-        ]
-
-        const firstDeck = GetRandom(decks);
+        const decks = await this.getDeckList(this.roomId);
 
 
-        const cardHtmlArray = decks.reduce(function (newCards, card) {
-            let cardHtml = `<div class='span-card-wrapper'><span class='spn-card-title'>${card.name} </span></div>`
-            newCards.push({ id: card.id, cardHtml: cardHtml });
-            return newCards;
-        }, []);
-
-
-        const inputOptions = new Map()
-        cardHtmlArray.forEach(item => inputOptions.set(item.id, item.cardHtml));
-        let deckID = null;
-        await Swal.fire({
-            title: '<strong>Choose Your Deck</strong>',
-            input: 'radio',
-            inputOptions: inputOptions,
-            inputValue: firstDeck.id,
-            inputValidator: function (value) {
-                return new Promise(function (resolve, reject) {
-                    if (value !== '') {
-                        resolve();
-                    } else {
-                        resolve('You need to select a deck');
-                    }
-                });
-            },
-            focusConfirm: false,
-            confirmButtonText:
-                'Select',
-            showCancelButton: false
-        }).then((result) => {
-            if (result.value) {
-
-                deckID = result.value;
-
+        const deckHtmlArray = await decks.reduce(function (newDecks, deck) {
+            if (!deck.isselected) {
+                let deckHtml = `<div class='span-card-wrapper ${deck.deckclass}'><span class='spn-card-title'>${deck.name} </span></div>`
+                newDecks.push({ id: deck.id, deckHtml: deckHtml });
             }
+            return newDecks;
+        }, []);
+        const firstDeck = GetRandom(deckHtmlArray);
 
-        });
-        if (deckID) {
-            //set roomid to reducer
-            //set deckid
-            //show confirmation form
-            this.displayRoomStatusModal(this.roomId, false);
-            this.pubnub.publish({
-                message: {
-                    notRoomCreator: true,
-                    type: PUBNUB_DECKSELECT
+        if (deckHtmlArray.length > 0) {
+            const inputOptions = new Map()
+            deckHtmlArray.forEach(item => inputOptions.set(item.id, item.deckHtml));
+            let deckID = null;
+            await Swal.fire({
+                title: '<strong>Choose Your Deck</strong>',
+                input: 'radio',
+                inputOptions: inputOptions,
+                inputValue: firstDeck.id,
+                inputValidator: function (value) {
+                    return new Promise(function (resolve, reject) {
+                        if (value !== '') {
+                            resolve();
+                        } else {
+                            resolve('You need to select a deck');
+                        }
+                    });
                 },
-                channel: this.lobbyChannel
-            },
-                (status, response) => {
-                });
-            this.setState({ isDeckSelcted: true })
+                focusConfirm: false,
+                confirmButtonText:
+                    'Select',
+                showCancelButton: true
+            }).then((result) => {
+                if (result.value) {
+                    deckID = result.value;
+                }
+                else if (result.dismiss === 'cancel') {
+                    this.unsubscribe();
+                }
+
+            });
+            if (deckID) {
+
+                //this.displayRoomStatusModal(this.roomId, false);
+                this.joinGame(this.roomId, deckID);
+                this.setState({ isDeckSelcted: true })
+            }
         }
     }
 
-    displayRoomStatusModal = (roomId, isRoomCreator) => {
+    displayRoomStatusModal = async (roomId, isRoomCreator) => {
+        //let decks = data.decks;
+
+        let decks = await this.getDeckList(roomId);
+        let isSelectedCount = 0;
+        let swalliData = '';
+        //debugger;
+        decks.map((deck, index) => {
+            let extraClass = deck.isselected ? 'fa fa-check success' : 'fa fa-question pending'
+            if (deck.isselected) isSelectedCount += 1;
+            swalliData += `
+                <li class='list-group-item ' key=${deck.id}>
+                    <div class='game-status-list-item'>
+                        <span> ${index + 1}. ${deck.name} </span>
+                        <i class=' ${extraClass}'></i>
+                    </div>
+                </li> `;
+
+        })
 
         let swalHtml = ` <div className="game-room">
                                 <div className="row room-header">
@@ -178,69 +184,45 @@ export class GameInit extends Component {
                                 <div class="room-deck-container row">
                                     <span class="deck-title col-12 text-left">Decks: </span>
                                     <ul class='list-group list-group-flush text-left'>
-                                        <li class='list-group-item '>
-                                            <div class='game-status-list-item'>
-                                                <span> 1. Barbariain </span>
-                                                <i class="fa fa-check success"></i>
-                                            </div>
-                                        </li>
-                                        <li class='list-group-item '>
-                                            <div class='game-status-list-item'>
-                                                <span> 2. Paladin </span>
-                                                <i class="fa fa-question ${isRoomCreator === true ? 'pending' : 'success'}"></i>
-                                            </div>
-                                        </li>
-                                        <li class='list-group-item '>
-                                            <div class='game-status-list-item'>
-                                                <span> 3. Rogue </span>
-                                                <i class="fa fa-question pending"></i>
-                                            </div>
-                                        </li>
-                                        <li class='list-group-item '>
-                                            <div class='game-status-list-item'>
-                                                <span> 4. Wizard </span>
-                                                <i class="fa fa-question pending"></i>
-                                            </div>
-                                        </li>
+                                       ${swalliData}
                                     </ul>
                                 </div>
                             </div>`;
 
 
         Swal.fire({
-            title: `Your game room is created.`,
+            title: this.state.isRoomCreator ? `You have created a game.` : `You have joined the game`,
             icon: 'success',
             html: swalHtml,
             text: roomId,
             position: 'top-center',
             allowOutsideClick: false,
-            showConfirmButton: false,
+            showConfirmButton: this.state.isRoomCreator === true && isSelectedCount > 1,
+            showCancelButton: true,
+            cancelButtonText: this.state.isRoomCreator ? '<i class="fa fa-thumbs-down"></i>Close' : '<i class="fa fa-thumbs-down"></i> Leave',
+            confirmButtonText: 'Start Game',
+            footer: this.state.isRoomCreator == true ? '' : '<span>Awaiting room creator confirmation</span>'
 
         });
     }
 
     getDeckMasterList = async () => {
         let paramObj = {};
-        let deckList = await gameactionlist.deckinit(paramObj, async result => {
-            deckList = result.data.deck;
-            this.masterdeck = result.data.deck;
-            // await this.setState({masterdeck: result.data.deck});
-        })
-        return deckList;
-
-    }
-
-    getDeckList = async () => {
-
-        let paramObj = {};
         await gameactionlist.deckinit(paramObj, async result => {
             //if (result.success === true) {
             let deckList = result.deck;
             await this.setState({ masterdeck: deckList });
             //}
-
-
         });
+
+    }
+
+    getDeckList = async (roomid) => {
+
+        let paramObj = { gameid: roomid };
+        let decklist = await gameactionlist.decklist(paramObj);
+
+        return decklist.data.deck;
     }
 
     getRandomDeck = async () => {
@@ -326,19 +308,52 @@ export class GameInit extends Component {
         }
 
         await gameactionlist.gameinit(paramObj, async result => {
-            console.log(result);
-            //if (result.success === true) {
-            //let deckList = result.deck;
-            //await this.setState({ masterdeck: deckList });
-            //}
-
+            let data = result.data;
+            this.setState({ isRoomCreator: true })
+            this.displayRoomStatusModal(this.roomId, true);
 
         });
-
-
-        this.setState({ isRoomCreator: true })
-        this.displayRoomStatusModal(this.roomId, true);
     }
+
+    joinGame = async (roomid, deckid) => {
+        var userData = GetUserData();
+        var userID = userData.userid;
+
+        let paramObj = {
+            userid: userID,
+            gameid: roomid,
+            deckid: deckid
+        }
+
+        let result = await gameactionlist.joingame(paramObj);//, async result => {
+        debugger;
+        let output = result.data.result;
+        if (output.proceed === false) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: output.error,
+
+            })
+        }
+        else {
+            let decks = output.decklist
+            this.setState({ isRoomCreator: false })
+            this.displayRoomStatusModal(this.roomId, false);
+            this.pubnub.publish({
+                message: {
+                    notRoomCreator: true,
+                    type: PUBNUB_DECKSELECT
+                },
+                channel: this.lobbyChannel
+            },
+                (status, response) => {
+                });
+        }
+        //});
+    }
+
+
 
     onPressJoin = async (e) => {
         Swal.fire({
@@ -374,22 +389,15 @@ export class GameInit extends Component {
         // Check the number of people in the channel
         this.pubnub.hereNow({
             channels: [this.lobbyChannel],
-        }).then((response) => {
+        }).then(async (response) => {
             if (response.totalOccupancy < 4) {
 
                 this.subscribeChannel(this.lobbyChannel);
 
-
+                //   await  this.getDeckList(this.roomId);
+                //   debugger;
                 this.showChooseDeckOption();
-                this.setState({ isRoomCreator: false })
-                this.pubnub.publish({
-                    message: {
-                        notRoomCreator: true,
-                        type: PUBNUB_JOIN
 
-                    },
-                    channel: this.lobbyChannel
-                });
             }
             else {
                 // Game in progress

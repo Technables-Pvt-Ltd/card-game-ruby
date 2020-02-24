@@ -46,9 +46,9 @@ i.pending {
 }
 
 .game-status-list-item span {
-    font-size: 16px;
+    font-size: 14px;
     float: left;
-    width: 120px;
+    min-width: 180px;
 }
 
 .span-card-wrapper {

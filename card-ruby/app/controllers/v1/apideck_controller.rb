@@ -1,7 +1,10 @@
 require "db_controller"
+require "sqlite3"
 
 class V1::ApideckController < ApplicationController
   include DbController
+
+  #db = SQLite3::Database.new
 
   def index
     message = MSG_API_WELCOME
@@ -23,8 +26,8 @@ class V1::ApideckController < ApplicationController
       gameid = game.id
       isselected = false
       user = ""
-      if (deck.id == deckid)
-        isSelected = true
+      if (deck.id == deckid.to_i)
+        isselected = true
         user = userid
       end
 
@@ -34,84 +37,148 @@ class V1::ApideckController < ApplicationController
     return getGameDeck?(game.id)
   end
 
-  def addPlayertoGame?(gameid, deckid, userid)
+  def addPlayertoGame?(code, deckid, userid)
     proceed = false
-    error = ''
-    game = CardGame.where("code = ?", code)
-    if(game.length==0)
+    error = ""
+    games = CardGame.where("code = ?", code)
+    game = games.first()
+    if (games.length == 0)
       proceed = false
-      error = 'game with the provided code does not exists'
-    elsif game.status == GAME_STATUS_INIT
+      error = "game with the provided code does not exists"
+    elsif game.status != GAME_STATUS_INIT
       proceed = false
-      error = 'game does not accept player anymore'
+      error = "game does not accept player anymore"
     else
       proceed = true
-      error = ''
-      gamedecks = GameDeck.where('gameid=?', game.id)
+      error = ""
 
-      gamedecks.each do |deck|        
-        if (deck.id == deckid )
-          if(deck.isselected==false)
+      db = SQLite3::Database.open "db/card.sqlite3"
+      db.results_as_hash = true
 
-          deck.isselected = true
-          deck.userid = userid
-          deck.save
-          
-          else
-            proceed = false
-            error ='this deck is already selected'
-          end
+      check_user_exists = db.prepare("select 1 where exists(select 1 from game_decks gd
+        inner join card_games cg on gd.gameid = cg.id
+         where gd.userid = :userid and deckid<> :deckid
+         and isselected = 1 
+         and cg.code = :code)")
+      decks = check_user_exists.execute :userid => userid, :deckid=> deckid, :code => code
+      exists = decks.any?
+
+      if (exists == true)
+        proceed = false
+        error = "user already exists in this game"
+      else
+        check_deck_available = db.prepare("select 1 where exists(select 1 from game_decks gd
+          where gd.deckid =:deckid  and gd.gameid = :gameid and isselected=true and userid <> :userid)")
+        taken_cards = check_deck_available.execute :deckid => deckid, :gameid => game.id, :userid => userid
+        is_taken = taken_cards.any?
+
+        if (is_taken)
+          proceed = false
+          error = "this deck is already selected"
+        else
+          #ActiveRecord::Base.connection.execute("END TRANSACTION; END;")
+          #error = 'udpated'
+          update_deck_card = db.prepare("update game_decks
+                    set isselected = 1, userid = :userid
+                    where deckid = :deckid and gameid = :gameid")
+          update_deck_card.execute :userid => userid, :deckid => deckid, :gameid => game.id
         end
+
+        # gamedecks = GameDeck.where("gameid=?", game.id)
+
+        # gamedecks.each do |deck|
+        #   error += deck.id.to_s + " "
+        #   if (deck.id == deckid)
+        #     if (deck.isselected == false)
+        #       deck.isselected = true
+        #       deck.userid = userid
+        #       deck.save
+        #     else
+        #       proceed = false
+        #       error = "this deck is already selected"
+        #     end
+        #   end
+        # end
       end
     end
     if proceed
-      return {proceed: proceed, error: error, decklist = getGameDeck?(gameid)}
+      data = {
+        :proceed => proceed, :error => error, :decklist => getGameDeckByCode?(code),
+      }
+      return data
     else
-      return {proceed: proceed, error: error, decklist = []}
+      data = {
+        :proceed => proceed, :error => error, :decklist => [],
+      }
+      return data
     end
-
   end
 
-  def removePlayerFromGame?(code,  userid)
+  def removePlayerFromGame?(code, userid)
     proceed = false
-    error = ''
+    error = ""
     game = CardGame.where("code = ?", code)
-    if(game.length==0)
+    if (game.length == 0)
       proceed = false
-      error = 'game with the provided code does not exists'    
+      error = "game with the provided code does not exists"
     else
       proceed = true
-      error = ''
-      gamedecks = GameDeck.where('gameid=?', game.id)
+      error = ""
+      gamedecks = GameDeck.where("gameid=?", game.id)
 
-      gamedecks.each do |deck|        
-        if (deck.userid == userid )
-          if(deck.isselected==true)
+      gamedecks.each do |deck|
+        if (deck.userid == userid)
+          if (deck.isselected == true)
             deck.isselected = false
-            deck.userid = ''
-            deck.save          
+            deck.userid = ""
+            deck.save
           else
             proceed = false
-            error ='sorry!! could not complete the operation'
+            error = "sorry!! could not complete the operation"
           end
         end
       end
     end
     if proceed
-      return {proceed: proceed, error: error, decklist = []}
+      data = {
+        :proceed => proceed, :error => error, :decklist => [],
+      }
+      return data
     else
-      return {proceed: proceed, error: error, decklist = getGameDeck?(gameid)}
+      data = {
+        :proceed => proceed, :error => error, :decklist => getGameDeck?(gameid),
+      }
+      return data
+      #return {proceed: proceed, error: error, decklist = getGameDeck?(gameid)}
     end
-
   end
 
   def getGameDeck?(gameid)
-    decks = GameDeck.select("dt.id, dt.name, game_decks.isselected").joins("Inner Join deck_data dt on dt.id = game_decks.deckid").where(gameid: gameid)
+    db = SQLite3::Database.open "db/card.sqlite3"
+    db.results_as_hash = true
+    statememt = db.prepare("select dt.id, dt.name, gd.isselected , gd.userid
+      from game_decks gd 
+      Inner Join deck_data dt 
+        on dt.id = gd.deckid  where gd.gameid = :gameid")
+    decks = statememt.execute :gameid => gameid
+    #decks = GameDeck.select("dt.id, dt.name, game_decks.isselected").joins("Inner Join deck_data dt on dt.id = game_decks.deckid").where(gameid: gameid)
     return decks
   end
 
   def getGameDeckByCode?(gamecode)
-    decks = GameDeck.select("dt.id, dt.name, game_decks.isselected").joins("Inner Join deck_data dt on dt.id = game_decks.deckid").where(code: gamecode)
+    db = SQLite3::Database.open "db/card.sqlite3"
+    db.results_as_hash = true
+    statement = db.prepare("select dt.id as id, dt.name, gd.isselected , gd.userid, dt.deckclass
+      from game_decks gd 
+      Inner Join deck_data dt 
+        on dt.id = gd.deckid 
+      inner join card_games cg 
+        on cg.id = gd.gameid
+      where cg.code = :gamecode")
+
+    decks = statement.execute :gamecode => gamecode
+
+    #decks = GameDeck.select("dt.id, dt.name, game_decks.isselected").joins("Inner Join deck_data dt on dt.id = game_decks.deckid").where(code: gamecode)
     return decks
   end
 
@@ -197,14 +264,14 @@ class V1::ApideckController < ApplicationController
     status = STATUS_OK
     err_msg = ""
 
-    if !params[:gameid].ispresent? || gameid.nil?
+    if !params[:gameid].present? || gameid.nil?
       proceed = false
       status = STATUS_NOT_FOUND
       err_msg = MSG_PARAM_MISSING
     end
 
     if proceed
-      gamedeck = getGameDeck?(gameid)
+      gamedeck = getGameDeckByCode?(gameid)
       message = MSG_DECK_INITIATED
       success = true
       data = {
@@ -233,7 +300,7 @@ class V1::ApideckController < ApplicationController
     end
 
     if proceed
-      result = addPlayertoGame?(gameid, deckid, userid);
+      result = addPlayertoGame?(gameid, deckid, userid)
       message = MSG_DECK_INITIATED
       success = true
       data = {
@@ -261,11 +328,11 @@ class V1::ApideckController < ApplicationController
     end
 
     if proceed
-      result = removePlayerFromGame?(gameid, deckid, userid);
+      result = removePlayerFromGame?(gameid, deckid, userid)
       message = MSG_DECK_INITIATED
       success = true
       data = {
-        :data => { result:result},
+        :data => { result: result },
       }
 
       response_data = ApiResponse.new(message, success, data)

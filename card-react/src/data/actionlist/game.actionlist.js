@@ -4,7 +4,9 @@ import { services } from '../services'
 export const gameactionlist = {
     pubnubint,
     deckinit,
-    gameinit
+    gameinit,
+    decklist,
+    joingame
 }
 
 function pubnubint(config) {
@@ -46,5 +48,37 @@ function gameinit(obj, bindingResult) {
             }
         }, err => { console.log(err) }
     );
+}
+
+async function decklist(obj, bindingResult) {
+    let result = null;
+    await services.decklist(obj).then(
+        res => {
+            if (res && res.data) {
+                let respObj = res.data;
+                if (respObj.success) {
+                    result = respObj.data;
+                    if (bindingResult) bindingResult(respObj.data)
+                }
+            }
+        }, err => { console.log(err) }
+    );
+    return result;
+}
+
+async function joingame(obj, bindingResult) {
+    let result = null;
+    await services.joingame(obj).then(
+        res => {
+            if (res && res.data) {
+                let respObj = res.data;
+                if (respObj.success) {
+                    result = respObj.data;
+                    if (bindingResult) bindingResult(respObj.data)
+                }
+            }
+        }, err => { console.log(err) }
+    );
+    return result;
 }
 

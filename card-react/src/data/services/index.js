@@ -3,7 +3,9 @@ import axios from 'axios'
 
 export const services = {
   initdeck,
-  initgame
+  initgame,
+  decklist,
+  joingame
 }
 
 const deckEndPoint = EndPoints.DECKAPI;
@@ -38,6 +40,26 @@ async function initgame(obj) {
   var response = null;
 
   let url = deckEndPoint.INIT_GAME + `?gameid=${obj.gameid}&deckid=${obj.deckid}&userid=${obj.userid}`;
+  response = await axios.get(url, obj, axiosConfig);
+
+  return response;
+}
+
+async function decklist(obj) {
+  let axiosConfig = getHeader();
+  var response = null;
+
+  let url = deckEndPoint.DECK_LIST + `?gameid=${obj.gameid}`;
+  response = await axios.get(url, obj, axiosConfig);
+
+  return response;
+}
+
+async function joingame(obj) {
+  let axiosConfig = getHeader();
+  var response = null;
+
+  let url = deckEndPoint.JOIN_GAME + `?gameid=${obj.gameid}&deckid=${obj.deckid}&userid=${obj.userid}`;
   response = await axios.get(url, obj, axiosConfig);
 
   return response;
