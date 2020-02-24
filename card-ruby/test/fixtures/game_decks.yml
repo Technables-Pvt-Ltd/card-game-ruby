@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  gameid: 1
+  deckid: 1
+  userid: MyString
+  isselected: false
+
+two:
+  gameid: 1
+  deckid: 1
+  userid: MyString
+  isselected: false

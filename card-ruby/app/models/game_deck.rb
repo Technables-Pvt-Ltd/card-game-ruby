@@ -1,0 +1,2 @@
+class GameDeck < ApplicationRecord
+end

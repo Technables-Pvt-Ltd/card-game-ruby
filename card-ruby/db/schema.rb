@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_02_23_065507) do
+ActiveRecord::Schema.define(version: 2020_02_24_013853) do
 
   create_table "card_effect_maps", force: :cascade do |t|
     t.integer "cardid"
@@ -34,6 +34,14 @@ ActiveRecord::Schema.define(version: 2020_02_23_065507) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
+  create_table "card_games", force: :cascade do |t|
+    t.string "code"
+    t.string "userid"
+    t.integer "status"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+  end
+
   create_table "deck_cards", force: :cascade do |t|
     t.integer "deckid"
     t.string "name"
@@ -45,6 +53,15 @@ ActiveRecord::Schema.define(version: 2020_02_23_065507) do
   create_table "deck_data", force: :cascade do |t|
     t.string "name"
     t.string "deckclass"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+  end
+
+  create_table "game_decks", force: :cascade do |t|
+    t.integer "gameid"
+    t.integer "deckid"
+    t.string "userid"
+    t.boolean "isselected"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end

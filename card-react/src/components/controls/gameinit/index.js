@@ -114,8 +114,6 @@ export class GameInit extends Component {
 
         const firstDeck = GetRandom(decks);
 
-        //var response =
-        //get available decks
 
         const cardHtmlArray = decks.reduce(function (newCards, card) {
             let cardHtml = `<div class='span-card-wrapper'><span class='spn-card-title'>${card.name} </span></div>`
