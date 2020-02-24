@@ -34,8 +34,84 @@ class V1::ApideckController < ApplicationController
     return getGameDeck?(game.id)
   end
 
+  def addPlayertoGame?(gameid, deckid, userid)
+    proceed = false
+    error = ''
+    game = CardGame.where("code = ?", code)
+    if(game.length==0)
+      proceed = false
+      error = 'game with the provided code does not exists'
+    elsif game.status == GAME_STATUS_INIT
+      proceed = false
+      error = 'game does not accept player anymore'
+    else
+      proceed = true
+      error = ''
+      gamedecks = GameDeck.where('gameid=?', game.id)
+
+      gamedecks.each do |deck|        
+        if (deck.id == deckid )
+          if(deck.isselected==false)
+
+          deck.isselected = true
+          deck.userid = userid
+          deck.save
+          
+          else
+            proceed = false
+            error ='this deck is already selected'
+          end
+        end
+      end
+    end
+    if proceed
+      return {proceed: proceed, error: error, decklist = getGameDeck?(gameid)}
+    else
+      return {proceed: proceed, error: error, decklist = []}
+    end
+
+  end
+
+  def removePlayerFromGame?(code,  userid)
+    proceed = false
+    error = ''
+    game = CardGame.where("code = ?", code)
+    if(game.length==0)
+      proceed = false
+      error = 'game with the provided code does not exists'    
+    else
+      proceed = true
+      error = ''
+      gamedecks = GameDeck.where('gameid=?', game.id)
+
+      gamedecks.each do |deck|        
+        if (deck.userid == userid )
+          if(deck.isselected==true)
+            deck.isselected = false
+            deck.userid = ''
+            deck.save          
+          else
+            proceed = false
+            error ='sorry!! could not complete the operation'
+          end
+        end
+      end
+    end
+    if proceed
+      return {proceed: proceed, error: error, decklist = []}
+    else
+      return {proceed: proceed, error: error, decklist = getGameDeck?(gameid)}
+    end
+
+  end
+
   def getGameDeck?(gameid)
     decks = GameDeck.select("dt.id, dt.name, game_decks.isselected").joins("Inner Join deck_data dt on dt.id = game_decks.deckid").where(gameid: gameid)
+    return decks
+  end
+
+  def getGameDeckByCode?(gamecode)
+    decks = GameDeck.select("dt.id, dt.name, game_decks.isselected").joins("Inner Join deck_data dt on dt.id = game_decks.deckid").where(code: gamecode)
     return decks
   end
 
@@ -128,10 +204,11 @@ class V1::ApideckController < ApplicationController
     end
 
     if proceed
+      gamedeck = getGameDeck?(gameid)
       message = MSG_DECK_INITIATED
       success = true
       data = {
-        :data => { gameid: gameid, deckid: deckid, userid: userid },
+        :data => { deck: gamedeck },
       }
 
       response_data = ApiResponse.new(message, success, data)
@@ -156,10 +233,11 @@ class V1::ApideckController < ApplicationController
     end
 
     if proceed
+      result = addPlayertoGame?(gameid, deckid, userid);
       message = MSG_DECK_INITIATED
       success = true
       data = {
-        :data => { gameid: gameid, deckid: deckid, userid: userid },
+        :data => { result: result },
       }
 
       response_data = ApiResponse.new(message, success, data)
@@ -183,10 +261,11 @@ class V1::ApideckController < ApplicationController
     end
 
     if proceed
+      result = removePlayerFromGame?(gameid, deckid, userid);
       message = MSG_DECK_INITIATED
       success = true
       data = {
-        :data => { gameid: gameid, userid: userid },
+        :data => { result:result},
       }
 
       response_data = ApiResponse.new(message, success, data)
