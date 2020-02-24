@@ -1,11 +1,13 @@
 import {
     ROUTE_API_URL,
+    ROUTE_API_INITDECK,
     ROUTE_API_INITGAME
 } from '../constants/apiroutes'
 
 export default {
     DECKAPI :{
-        INIT_DECK: GenerateDeckURI(ROUTE_API_INITGAME)
+        INIT_DECK: GenerateDeckURI(ROUTE_API_INITDECK),
+        INIT_GAME: GenerateDeckURI(ROUTE_API_INITGAME)
     }
 }
 

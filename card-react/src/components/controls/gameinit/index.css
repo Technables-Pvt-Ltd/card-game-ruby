@@ -1,4 +1,7 @@
 
+
+@import '../../../colors/index.scss';
+
 .card-game-wrapper {
     background-color: #e2e2e2;
     border: 1px solid #ececec;
@@ -28,6 +31,7 @@
     margin: 10px auto;
     font-weight: 500;
 }
+
 i.success {
     color: #20a527;
 }
@@ -47,5 +51,41 @@ i.pending {
     width: 120px;
 }
 
+.span-card-wrapper {
+    border: 1px solid #e1e1e1;
+    border-radius: 10px;
+    margin: 5px 0px;
+    padding: 10px;
+    height: 150px;
+    width: 100px;
+    display: flex;
+    align-items: flex-end;
+    color: #ffffff;
+    font-weight: 500;
+    cursor: pointer;
+}
 
+.span-card-wrapper:active {
+    box-shadow: #ececec;
+}
+
+.spn-card-title {
+    font-size: 12px;
+}
+
+.deck-sutha {
+    background-color: #d77f4f;
+}
+
+.deck-azzan {
+    background-color: #bb9927;
+}
+
+.deck-lia {
+    background-color: #4fbbc2;
+}
+
+.deck-oriax {
+    background-color: #d37d8d;
+}
 

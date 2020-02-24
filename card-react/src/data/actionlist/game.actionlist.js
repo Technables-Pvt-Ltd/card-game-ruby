@@ -3,7 +3,8 @@ import { services } from '../services'
 
 export const gameactionlist = {
     pubnubint,
-    deckinit
+    deckinit,
+    gameinit
 }
 
 function pubnubint(config) {
@@ -22,7 +23,7 @@ function deckinit(obj, bindingResult) {
                 if (respObj.success) {
 
                     var resp = null;
-                    resp = res.data;
+                    resp = respObj.data;
 
                     if (bindingResult) bindingResult(resp);
                 }
@@ -30,7 +31,20 @@ function deckinit(obj, bindingResult) {
             else {
 
             }
-        }
+        }, err => { console.log(err) }
     )
+}
+
+function gameinit(obj, bindingResult) {
+    services.initgame(obj).then(
+        res => {
+            if (res && res.data) {
+                let respObj = res.data;
+                if (respObj.success) {
+                    if (bindingResult) bindingResult(respObj.data)
+                }
+            }
+        }, err => { console.log(err) }
+    );
 }
 

@@ -6,10 +6,12 @@ import Swal from 'sweetalert2'
 import shortid from 'shortid'
 import { PUBNUB_PUBLISH_KEY, PUBNUB_SUBSCRIBE_KEY } from '../../../data/constants/pubnub';
 import { gameactionlist } from '../../../data/actionlist';
-import { GetRandom } from '../../../data/helper';
+import { GetRandom, GetUserData } from '../../../data/helper';
 import { PUBNUB_JOIN, PUBNUB_DECKSELECT, PUBNUB_MESSAGE_BROADCAST } from '../../../data/constants/pubnub_messagetype';
 import { TOAST_SUCCESS } from '../../../data/constants/toastmessagetype';
 import { ShowMessage } from '../../../data/message/showMessage';
+import { GetDataFromStore } from '../../../data/datastore/storagehelper';
+import { User_Data, Card_Lobby_Initials, Card_Game_Initials } from '../../../data/constants/constants';
 
 export class GameInit extends Component {
 
@@ -20,7 +22,10 @@ export class GameInit extends Component {
         this.roomId = null;
         this.lobbyChannel = null;
         this.gameChannel = null;
-        //this.state = { cardgame: this.props.cardgame };
+        this.masterdeck = [];
+        this.getDeckList();
+        //this.setState({masterdeck: []});
+        //  this.state = { masterdeck: [] };
 
 
 
@@ -60,6 +65,7 @@ export class GameInit extends Component {
     }
 
     publishMessage = (channel, msg) => {
+        debugger;
         this.pubnub.publish({
             message: msg,
             channel: channel
@@ -79,11 +85,11 @@ export class GameInit extends Component {
         if (msg.type) {
             switch (msg.type) {
                 case PUBNUB_JOIN:
-                    this.gameChannel = 'dungeonmayhem-game--' + this.roomId;
+                    this.gameChannel = Card_Game_Initials + this.roomId;
                     this.subscribeChannel(this.gameChannel);
-
-                    let message = this.generateMessageObj(PUBNUB_MESSAGE_BROADCAST, { data: "New Player Joined", type: TOAST_SUCCESS })
-                    this.publishMessage(this.lobbyChannel, message)
+                    alert(1);
+                    // let message = this.generateMessageObj(PUBNUB_MESSAGE_BROADCAST, { data: "New Player Joined", type: TOAST_SUCCESS })
+                    // this.publishMessage(this.lobbyChannel, message)
                     break;
                 case PUBNUB_DECKSELECT:
                     this.displayRoomStatusModal(this.roomId, msg.isRoomCreator);
@@ -215,67 +221,67 @@ export class GameInit extends Component {
         });
     }
 
-    getDeckMasterList = () =>{
+    getDeckMasterList = async () => {
         let paramObj = {};
-        debugger;
-        gameactionlist.deckinit(paramObj, async result => {
-            debugger;
+        let deckList = await gameactionlist.deckinit(paramObj, async result => {
+            deckList = result.data.deck;
+            this.masterdeck = result.data.deck;
+            // await this.setState({masterdeck: result.data.deck});
         })
-        
+        return deckList;
+
     }
 
-    getDeckList = () => {
+    getDeckList = async () => {
 
-        const decks = [
-            { id: 1, name: "Barbarian" },
-            { id: 2, name: "Paladin" },
-            { id: 3, name: "Rogue" },
-            { id: 4, name: "Wizard" },
+        let paramObj = {};
+        await gameactionlist.deckinit(paramObj, async result => {
+            //if (result.success === true) {
+            let deckList = result.deck;
+            await this.setState({ masterdeck: deckList });
+            //}
 
-        ]
 
-        return decks;
+        });
     }
 
-    getRandomDeck = () => {
-        const decks = this.getDeckList();
+    getRandomDeck = async () => {
+        const decks = this.state.masterdeck ? this.state.masterdeck : [];
         const firstDeck = GetRandom(decks);
-
         return firstDeck;
+
     }
 
-    getDeckListHtml = () => {
+    getDeckListHtml = async () => {
 
-        const decks = this.getDeckList();;
-
-        const cardHtmlArray = decks.reduce(function (newCards, card) {
-            let cardHtml = `<div class='span-card-wrapper'><span class='spn-card-title'>${card.name} </span></div>`
+        const decks = this.state.masterdeck ? this.state.masterdeck : [];
+        const cardHtmlArray = await decks.reduce(function (newCards, card) {
+            let cardHtml = `<div class='span-card-wrapper ${card.deckclass}'><span class='spn-card-title'>${card.name} </span></div>`
             newCards.push({ id: card.id, cardHtml: cardHtml });
             return newCards;
         }, []);
 
-        const inputOptions = new Map()
+        const inputOptions = new Map();
         cardHtmlArray.forEach(item => inputOptions.set(item.id, item.cardHtml));
         return inputOptions;
     }
 
     onPressCreate = async (e) => {
-
-        this.getDeckMasterList();
-
+        // await this.getDeckList();
         this.roomId = shortid.generate().substring(0, 6);
-        this.lobbyChannel = 'dungeonmayhem-lobby--' + this.roomId;
+        this.lobbyChannel = Card_Lobby_Initials + this.roomId;
 
         this.subscribeChannel(this.lobbyChannel);
-        const firstDeck = this.getRandomDeck();
-        let inputOptions = this.getDeckListHtml();
-        
+        const firstDeck = await this.getRandomDeck();
+        let inputOptions = await this.getDeckListHtml();
+
         let deckID = null;
         await Swal.fire({
             title: '<strong>Choose Your Deck</strong>',
             input: 'radio',
             inputOptions: inputOptions,
             inputValue: firstDeck.id,
+            allowOutsideClick: false,
             inputValidator: function (value) {
                 return new Promise(function (resolve, reject) {
                     if (value !== '') {
@@ -286,9 +292,8 @@ export class GameInit extends Component {
                 });
             },
             focusConfirm: false,
-            confirmButtonText:
-                'Select',
-            showCancelButton: false
+            confirmButtonText: 'Select',
+            showCancelButton: true
         }).then((result) => {
             if (result.value) {
                 deckID = result.value;
@@ -296,29 +301,45 @@ export class GameInit extends Component {
         });
 
         if (deckID) {
-            //set roomid to reducer
-            //set deckid
-            //show confirmation form
-            this.pubnub.publish({
-                message: {
-                    notRoomCreator: false,
-                    type: PUBNUB_JOIN
-                },
-                channel: this.lobbyChannel
-            });
-            this.setState({ isRoomCreator: true })
-            this.displayRoomStatusModal(this.roomId, true);
 
+            this.createGame(this.roomId, deckID);
         }
 
 
-        const { dispatch } = this.props;
+        // const { dispatch } = this.props;
 
 
-        dispatch(gameactionlist.pubnubint({
-            roomId: this.roomId, lobbyChannel: this.lobbyChannel
-        }));
+        // dispatch(gameactionlist.pubnubint({
+        //     roomId: this.roomId, lobbyChannel: this.lobbyChannel
+        // }));
 
+
+    }
+
+    createGame = async (roomid, deckID) => {
+
+        var userData = GetUserData();
+        var userID = userData.userid;
+
+        let paramObj = {
+            userid: userID,
+            gameid: roomid,
+            deckid: deckID
+        }
+
+        await gameactionlist.gameinit(paramObj, async result => {
+            console.log(result);
+            //if (result.success === true) {
+            //let deckList = result.deck;
+            //await this.setState({ masterdeck: deckList });
+            //}
+
+
+        });
+
+
+        this.setState({ isRoomCreator: true })
+        this.displayRoomStatusModal(this.roomId, true);
     }
 
     onPressJoin = async (e) => {
@@ -348,7 +369,7 @@ export class GameInit extends Component {
         this.roomId = value;
 
 
-        this.lobbyChannel = 'dungeonmayhem-lobby--' + this.roomId;
+        this.lobbyChannel = Card_Lobby_Initials + this.roomId;
 
 
 
@@ -367,6 +388,7 @@ export class GameInit extends Component {
                     message: {
                         notRoomCreator: true,
                         type: PUBNUB_JOIN
+
                     },
                     channel: this.lobbyChannel
                 });

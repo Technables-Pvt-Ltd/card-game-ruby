@@ -20,7 +20,7 @@ export class Home extends Component {
                                 Dungeon Mayhem™ is a free-for-all battle for two to four players. Be the last player left standing and you win!
                             </p>
                             <p>
-                                Play as one of four brave, quirky characters—Barbarian, Paladin, Rogue, or Wizard—battling it out in a dungeon full of treasure!  Each character’s tricks, gear, and skills are represented by a deck of cards.
+                                Play as one of four brave, quirky Sutha, Azzan, Lia, or Oriax —battling it out in a dungeon full of treasure!  Each character’s tricks, gear, and skills are represented by a deck of cards.
                             </p>
 
                         </div>

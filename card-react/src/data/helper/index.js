@@ -1,3 +1,7 @@
+import { SaveDataToStore, GetDataFromStore } from "../datastore/storagehelper";
+import { User_Data, User_Detail } from "../constants/constants";
+import shortid from 'shortid'
+
 /*
     replace url param with value
     param:
@@ -24,4 +28,18 @@ export function replaceParam(pathRegex, params) {
 */
 export function GetRandom(array) {
     return array[Math.floor((Math.random() * array.length))];
+}
+
+export function GetUserData() {
+    var user = GetDataFromStore(User_Detail);
+    if (user == null) {
+        let userid = 'user-' + shortid.generate().substring(0, 8);
+        let userData = { userid: userid };
+
+        SaveDataToStore(User_Detail, userData);
+
+        user = GetDataFromStore(User_Detail);
+    }
+
+    return user;
 }
