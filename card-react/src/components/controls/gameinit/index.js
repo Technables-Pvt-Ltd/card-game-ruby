@@ -87,7 +87,7 @@ export class GameInit extends Component {
                 case PUBNUB_JOIN:
                     this.gameChannel = Card_Game_Initials + this.roomId;
                     this.subscribeChannel(this.gameChannel);
-                    alert(1);
+                    //alert(1);
                     // let message = this.generateMessageObj(PUBNUB_MESSAGE_BROADCAST, { data: "New Player Joined", type: TOAST_SUCCESS })
                     // this.publishMessage(this.lobbyChannel, message)
                     break;
