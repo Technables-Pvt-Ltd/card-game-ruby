@@ -126,18 +126,34 @@ class V1::ApideckController < ApplicationController
       error = ""
       gamedecks = GameDeck.where("gameid=?", game.id)
 
-      gamedecks.each do |deck|
-        if (deck.userid == userid)
-          if (deck.isselected == true)
-            deck.isselected = false
-            deck.userid = ""
-            deck.save
-          else
-            proceed = false
-            error = "sorry!! could not complete the operation"
-          end
-        end
+      check_deck_available = db.prepare("select 1 where exists(select 1 from game_decks gd
+        where gd.deckid =:deckid  and gd.gameid = :gameid and isselected=true and userid = :userid)")
+      taken_cards = check_deck_available.execute :deckid => deckid, :gameid => game.id, :userid => userid
+      is_taken = taken_cards.any?
+
+      if (is_taken)
+        update_deck_card = db.prepare("update game_decks
+          set isselected = 1, userid = :userid
+          where deckid = :deckid and gameid = :gameid")
+          update_deck_card.execute :userid => userid, :deckid => deckid, :gameid => game.id
+      else
+        #ActiveRecord::Base.connection.execute("END TRANSACTION; END;")
+        #error = 'udpated'
+        proceed = false
+        error = "sorry!! could not complete the operation"
       end
+
+      # gamedecks.each do |deck|
+      #   if (deck.userid == userid)
+      #     if (deck.isselected == true)
+      #       deck.isselected = false
+      #       deck.userid = ""
+      #       deck.save
+      #     else
+           
+      #     end
+      #   end
+      # end
     end
     if proceed
       data = {
@@ -146,7 +162,7 @@ class V1::ApideckController < ApplicationController
       return data
     else
       data = {
-        :proceed => proceed, :error => error, :decklist => getGameDeck?(gameid),
+        :proceed => proceed, :error => error, :decklist => getGameDeck?(game.id),
       }
       return data
       #return {proceed: proceed, error: error, decklist = getGameDeck?(gameid)}
@@ -272,7 +288,7 @@ class V1::ApideckController < ApplicationController
 
     if proceed
       gamedeck = getGameDeckByCode?(gameid)
-      message = MSG_DECK_INITIATED
+      message = MSG_DECK_LISTING
       success = true
       data = {
         :data => { deck: gamedeck },
@@ -301,7 +317,7 @@ class V1::ApideckController < ApplicationController
 
     if proceed
       result = addPlayertoGame?(gameid, deckid, userid)
-      message = MSG_DECK_INITIATED
+      message = MSG_PLAYER_JOINED
       success = true
       data = {
         :data => { result: result },
@@ -329,7 +345,7 @@ class V1::ApideckController < ApplicationController
 
     if proceed
       result = removePlayerFromGame?(gameid, deckid, userid)
-      message = MSG_DECK_INITIATED
+      message = MSG_PLAYER_LEFT
       success = true
       data = {
         :data => { result: result },

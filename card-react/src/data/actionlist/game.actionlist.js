@@ -6,7 +6,9 @@ export const gameactionlist = {
     deckinit,
     gameinit,
     decklist,
-    joingame
+    joingame,
+    leavegame,
+    closegame
 }
 
 function pubnubint(config) {
@@ -75,6 +77,38 @@ async function joingame(obj, bindingResult) {
                 if (respObj.success) {
                     result = respObj.data;
                     if (bindingResult) bindingResult(respObj.data)
+                }
+            }
+        }, err => { console.log(err) }
+    );
+    return result;
+}
+
+async function leavegame(obj) {
+    let result = null;
+    await services.leavegame(obj).then(
+        res => {
+            if (res && res.data) {
+                let respObj = res.data;
+                if (respObj.success) {
+                    result = respObj.data;
+
+                }
+            }
+        }, err => { console.log(err) }
+    );
+    return result;
+}
+
+async function closegame(obj) {
+    let result = null;
+    await services.closegame(obj).then(
+        res => {
+            if (res && res.data) {
+                let respObj = res.data;
+                if (respObj.success) {
+                    result = respObj.data;
+
                 }
             }
         }, err => { console.log(err) }

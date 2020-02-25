@@ -5,7 +5,9 @@ export const services = {
   initdeck,
   initgame,
   decklist,
-  joingame
+  joingame,
+  leavegame,
+  closegame
 }
 
 const deckEndPoint = EndPoints.DECKAPI;
@@ -60,6 +62,26 @@ async function joingame(obj) {
   var response = null;
 
   let url = deckEndPoint.JOIN_GAME + `?gameid=${obj.gameid}&deckid=${obj.deckid}&userid=${obj.userid}`;
+  response = await axios.get(url, obj, axiosConfig);
+
+  return response;
+}
+
+async function leavegame(obj) {
+  let axiosConfig = getHeader();
+  var response = null;
+
+  let url = deckEndPoint.LEAVE_GAME + `?gameid=${obj.gameid}&deckid=${obj.deckid}&userid=${obj.userid}`;
+  response = await axios.get(url, obj, axiosConfig);
+
+  return response;
+}
+
+async function closegame(obj) {
+  let axiosConfig = getHeader();
+  var response = null;
+
+  let url = deckEndPoint.CLOSE_GAME + `?gameid=${obj.gameid}&userid=${obj.userid}`;
   response = await axios.get(url, obj, axiosConfig);
 
   return response;
