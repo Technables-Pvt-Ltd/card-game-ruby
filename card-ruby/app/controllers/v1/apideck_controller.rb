@@ -114,17 +114,22 @@ class V1::ApideckController < ApplicationController
     end
   end
 
-  def removePlayerFromGame?(code, userid)
+  def removePlayerFromGame?(code, userid, deckid)
     proceed = false
     error = ""
-    game = CardGame.where("code = ?", code)
-    if (game.length == 0)
+    games = CardGame.where("code = ?", code)
+    
+    if (games.length == 0)
       proceed = false
       error = "game with the provided code does not exists"
     else
+      game = games.first()
       proceed = true
       error = ""
       gamedecks = GameDeck.where("gameid=?", game.id)
+
+      db = SQLite3::Database.open "db/card.sqlite3"
+      db.results_as_hash = true
 
       check_deck_available = db.prepare("select 1 where exists(select 1 from game_decks gd
         where gd.deckid =:deckid  and gd.gameid = :gameid and isselected=true and userid = :userid)")
@@ -137,8 +142,6 @@ class V1::ApideckController < ApplicationController
           where deckid = :deckid and gameid = :gameid")
           update_deck_card.execute :userid => userid, :deckid => deckid, :gameid => game.id
       else
-        #ActiveRecord::Base.connection.execute("END TRANSACTION; END;")
-        #error = 'udpated'
         proceed = false
         error = "sorry!! could not complete the operation"
       end
@@ -167,6 +170,49 @@ class V1::ApideckController < ApplicationController
       return data
       #return {proceed: proceed, error: error, decklist = getGameDeck?(gameid)}
     end
+  end
+
+  def closeGame?(code, userid)
+    proceed = false
+    error = ""
+    games = CardGame.where("code = ?", code)
+    data = nil
+    if (games.length == 0)
+      proceed = false
+      error = "game with the provided code does not exists"
+    else
+      game = games.first()
+      if game.userid == userid
+        proceed = true
+        error = ""
+
+        db = SQLite3::Database.open "db/card.sqlite3"
+        db.results_as_hash = true
+
+      
+
+        delete_game_decks = db.prepare("delete from game_decks gd where gd.gameid = :gameid")
+        delete_game_decks.execute  :gameid => game.id
+
+        delete_card_game = db.prepare("delete from card_games cg where cg.id = :gameid")
+        delete_card_game.execute  :gameid => game.id
+      else
+        proceed = fase
+        error = "close request initiated by non-admin user"
+      end
+    end
+    if proceed
+      data = {
+        :proceed => proceed, :error => error
+      }
+      #return data
+    else
+      data = {
+        :proceed => proceed, :error => error
+      }
+      
+    end
+    return data
   end
 
   def getGameDeck?(gameid)
@@ -198,37 +244,7 @@ class V1::ApideckController < ApplicationController
     return decks
   end
 
-  # def addGameDeck
-  #   #truncatetable?('deck_data')
-  #   checkdeckdata()
-  #   decks = DeckDatum.select(:id, :name, :deckclass).all
-
-  #   resultDecks = []
-
-  #   decks.each do |deck|
-  #     cards = DeckCard.select(:id, :deckid, :name).where(deckid: deck.id)
-
-  #     resultCards = []
-
-  #     cards.each do |card|
-  #       effects = CardEffectsMap.select('card_effects_maps.id, eff.name, eff.effectclass, card_effects_maps.count,card_effects_maps.cardid').joins('Inner Join card_effects eff on eff.id = card_effects_maps.effectid')#.where(cardid: card.id)
-  #       resultCards<< {card: card ,effects: effects};
-  #     end
-
-  #     resultDecks << { deck: deck, cards: resultCards }
-  #   end
-
-  #   message = MSG_DECK_INITIATED
-  #   status = STATUS_OK
-  #   success = true
-  #   data = {
-  #     :deck => resultDecks,
-
-  #   }
-
-  #   response_data = ApiResponse.new(message, success, data)
-  #   render json: response_data, status: STATUS_OK
-  # end
+ 
 
   def init
     check = checkdeckdata()
@@ -333,6 +349,35 @@ class V1::ApideckController < ApplicationController
   def removeplayer
     gameid = params[:gameid]
     userid = params[:userid]
+    deckid = params[:deckid]
+
+    status = STATUS_OK
+    proceed = true
+    err_msg = ""
+    if (!params[:gameid].present? || !params[:userid].present?) || !params[:deckid].present?) || gameid.nil? || userid.nil? || deckid.nil?
+      proceed = false
+      err_msg = MSG_PARAM_MISSING
+      status = STATUS_NOT_FOUND
+    end
+
+    if proceed
+      result = removePlayerFromGame?(gameid, deckid, userid)
+      message = MSG_PLAYER_LEFT
+      success = true
+      data = {
+        :data => { result: result },
+      }
+
+      response_data = ApiResponse.new(message, success, data)
+    else
+      response_data = ApiResponse.new(err_msg, proceed, nil)
+    end
+    render json: response_data, status: STATUS_OK
+  end
+
+  def removeplayer
+    gameid = params[:gameid]
+    userid = params[:userid]
 
     status = STATUS_OK
     proceed = true
@@ -344,8 +389,8 @@ class V1::ApideckController < ApplicationController
     end
 
     if proceed
-      result = removePlayerFromGame?(gameid, deckid, userid)
-      message = MSG_PLAYER_LEFT
+      result = closeGame?(gameid, userid)
+      message = MSG_GAME_CLOSED
       success = true
       data = {
         :data => { result: result },
