@@ -92,6 +92,7 @@ export class GameInit extends Component {
   };
 
   handlePubNubMessage = msg => {
+    let message = null;
     if (msg.type) {
       switch (msg.type) {
         case PUBNUB_JOIN:
@@ -100,7 +101,7 @@ export class GameInit extends Component {
           break;
         case PUBNUB_DECKSELECT:
           this.displayRoomStatusModal(this.roomId, msg.isRoomCreator);
-          let message = this.generateMessageObj(PUBNUB_MESSAGE_BROADCAST, {
+           message = this.generateMessageObj(PUBNUB_MESSAGE_BROADCAST, {
             data: "New Player Joined",
             type: TOAST_SUCCESS
           });
@@ -108,7 +109,7 @@ export class GameInit extends Component {
           break;
 
         case PUBNUB_DECKLEAVE:
-          let message = this.generateMessageObj(PUBNUB_MESSAGE_BROADCAST, {
+           message = this.generateMessageObj(PUBNUB_MESSAGE_BROADCAST, {
             data: "One Player Left",
             type: TOAST_SUCCESS
           });
@@ -117,7 +118,7 @@ export class GameInit extends Component {
           break;
 
         case PUBNUB_GAMECLOSE:
-          let message = this.generateMessageObj(PUBNUB_MESSAGE_BROADCAST, {
+           message = this.generateMessageObj(PUBNUB_MESSAGE_BROADCAST, {
             data: "Sorry!! Game was closed by admin",
             type: TOAST_SUCCESS
           });
@@ -140,7 +141,7 @@ export class GameInit extends Component {
   showChooseDeckOption = async () => {
     const decks = await this.getDeckList(this.roomId);
 
-    const deckHtmlArray = await decks.reduce(function(newDecks, deck) {
+    const deckHtmlArray = await decks.reduce(function (newDecks, deck) {
       if (!deck.isselected) {
         let deckHtml = `<div class='span-card-wrapper ${deck.deckclass}'><span class='spn-card-title'>${deck.name} </span></div>`;
         newDecks.push({ id: deck.id, deckHtml: deckHtml });
@@ -158,8 +159,8 @@ export class GameInit extends Component {
         input: "radio",
         inputOptions: inputOptions,
         inputValue: firstDeck.id,
-        inputValidator: function(value) {
-          return new Promise(function(resolve, reject) {
+        inputValidator: function (value) {
+          return new Promise(function (resolve, reject) {
             if (value !== "") {
               resolve();
             } else {
@@ -241,10 +242,12 @@ export class GameInit extends Component {
           : "<span>Awaiting room creator confirmation</span>"
     }).then(result => {
       if (result.value) {
-        deckID = result.value;
+        //deckID = result.value;
+        console.log(result.value);
       } else if (result.dismiss === "cancel") {
         if (this.state.isRoomCreator) {
           alert("close called");
+          this.onGameClose(this.roomId);
         } else {
           alert("leave called");
           this.onGameLeave(this.roomId, this.state.deckid);
@@ -278,7 +281,7 @@ export class GameInit extends Component {
 
   getDeckListHtml = async () => {
     const decks = this.state.masterdeck ? this.state.masterdeck : [];
-    const cardHtmlArray = await decks.reduce(function(newCards, card) {
+    const cardHtmlArray = await decks.reduce(function (newCards, card) {
       let cardHtml = `<div class='span-card-wrapper ${card.deckclass}'><span class='spn-card-title'>${card.name} </span></div>`;
       newCards.push({ id: card.id, cardHtml: cardHtml });
       return newCards;
@@ -305,8 +308,8 @@ export class GameInit extends Component {
       inputOptions: inputOptions,
       inputValue: firstDeck.id,
       allowOutsideClick: false,
-      inputValidator: function(value) {
-        return new Promise(function(resolve, reject) {
+      inputValidator: function (value) {
+        return new Promise(function (resolve, reject) {
           if (value !== "") {
             resolve();
           } else {
@@ -381,7 +384,7 @@ export class GameInit extends Component {
           },
           channel: this.lobbyChannel
         },
-        (status, response) => {}
+        (status, response) => { }
       );
     }
     //});
@@ -480,7 +483,7 @@ export class GameInit extends Component {
           },
           channel: this.lobbyChannel
         },
-        (status, response) => {}
+        (status, response) => { }
       );
     }
     //});
@@ -505,6 +508,8 @@ export class GameInit extends Component {
         title: "Oops...",
         text: output.error
       });
+
+      this.displayRoomStatusModal(this.roomId, false);
     } else {
       this.setState({ deckid: "" });
       this.displayRoomStatusModal(this.roomId, false);
@@ -550,7 +555,7 @@ export class GameInit extends Component {
           },
           channel: this.lobbyChannel
         },
-        (status, response) => {}
+        (status, response) => { }
       );
     }
   };

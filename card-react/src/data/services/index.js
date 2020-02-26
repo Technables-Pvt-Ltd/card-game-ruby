@@ -27,8 +27,7 @@ function getHeader() {
 }
 
 async function initdeck(obj) {
-
-  let axiosConfig = getHeader();
+let axiosConfig = getHeader();
 
   var response = null;
 

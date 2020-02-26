@@ -13,6 +13,7 @@ Rails.application.routes.draw do
     get "deck/getdeck", to: 'apideck#getgamedeck'
     get "deck/join", to: 'apideck#addplayer'
     get "deck/leave", to: 'apideck#removeplayer'
+    get "deck/close", to: 'apideck#closegame'
     get "deck/start", to: 'apideck#startgame'
   end
 
