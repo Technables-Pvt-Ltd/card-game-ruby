@@ -115,6 +115,7 @@ export class GameInit extends Component {
           });
 
           this.publishMessage(this.lobbyChannel, message);
+          this.displayRoomStatusModal(this.roomId, false);
           break;
 
         case PUBNUB_GAMECLOSE:
@@ -198,6 +199,7 @@ export class GameInit extends Component {
       let extraClass = deck.isselected
         ? "fa fa-check success"
         : "fa fa-question pending";
+        debugger;
       if (deck.isselected) isSelectedCount += 1;
       swalliData += `
                 <li class='list-group-item ' key=${deck.id}>
@@ -512,7 +514,7 @@ export class GameInit extends Component {
       this.displayRoomStatusModal(this.roomId, false);
     } else {
       this.setState({ deckid: "" });
-      this.displayRoomStatusModal(this.roomId, false);
+      //this.displayRoomStatusModal(this.roomId, false);
       this.pubnub.publish(
         {
           message: {
@@ -547,7 +549,7 @@ export class GameInit extends Component {
       });
     } else {
       this.setState({ deckid: "" });
-      this.displayRoomStatusModal(this.roomId, false);
+      //this.displayRoomStatusModal(this.roomId, false);
       this.pubnub.publish(
         {
           message: {
