@@ -2,10 +2,10 @@ module DbController
   def checkdeckdata
     decks = DeckDatum.all
 
-    #DeckDatum.
 
     if decks.length == 0
       seed_effects()
+      seed_piletypes()
       seed_deckdata()
     end
 
@@ -29,6 +29,13 @@ module DbController
     effect = CardEffect.create(name: "attack", effectclass: "eff-attack")
     effect = CardEffect.create(name: "defense", effectclass: "eff-defense")
     effect = CardEffect.create(name: "heal", effectclass: "eff-heal")
+  end
+
+  def seed_piletypes
+    PileType.create(name:"deck")
+    PileType.create(name:"hand")
+    PileType.create(name:"active")
+    PileType.create(name:"discard")
   end
 
   def seed_deck_cards?(deckid, decktype)

@@ -5,6 +5,9 @@ import './index.css'
 import GameInit from '../../controls/gameinit'
 
 export class Home extends Component {
+    constructor(props){
+        super(props);
+    }
     render() {
         return (
             <Aux>
@@ -63,7 +66,7 @@ export class Home extends Component {
                                 </ul>
                             </div>
                             <div className="col-4">
-                                <GameInit/>
+                                <GameInit history={this.props.history}/>
                             </div>
                         </div>
                     </div>
@@ -74,9 +77,9 @@ export class Home extends Component {
     }
 }
 
-const mapStateToProps = (state) => ({
-
-})
+const mapStateToProps = (state) => {
+    return state;
+}
 
 const mapDispatchToProps = {
 

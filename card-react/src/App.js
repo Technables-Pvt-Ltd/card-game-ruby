@@ -9,7 +9,8 @@ import 'react-toastify/dist/ReactToastify.css';
 
 
 import Header from './components/controls/header'
-import { defaultRoute } from './routes';
+import { defaultRoute, InternalRoutes } from './routes';
+import InternalRoute from './components/controls/internalRoute/InternalRoute'
 
 
 
@@ -26,7 +27,19 @@ class App extends React.Component {
           render={props => <route.component {...props} />}
         />
       ) : null;
-    })
+    });
+
+    const iRoutes = InternalRoutes.map((route, index) => {
+      return route.component ? (
+        <InternalRoute
+          key={index}
+          path={route.path}
+          exact={route.exact}
+          name={route.name}
+          component={route.component}
+        />
+      ) : null;
+    });
 
     return (
       <Aux>
@@ -37,6 +50,7 @@ class App extends React.Component {
                 <Header />
                 
                 {dRoute}
+                {iRoutes}
                 <ToastContainer />
               </div>
             </React.Fragment>

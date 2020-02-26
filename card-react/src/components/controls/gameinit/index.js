@@ -9,13 +9,14 @@ import {
   PUBNUB_SUBSCRIBE_KEY
 } from "../../../data/constants/pubnub";
 import { gameactionlist } from "../../../data/actionlist";
-import { GetRandom, GetUserData } from "../../../data/helper";
+import { GetRandom, GetUserData, replaceParam } from "../../../data/helper";
 import {
   PUBNUB_JOIN,
   PUBNUB_DECKSELECT,
   PUBNUB_MESSAGE_BROADCAST,
   PUBNUB_DECKLEAVE,
-  PUBNUB_GAMECLOSE
+  PUBNUB_GAMECLOSE,
+  PUBNUB_GAMESTART
 } from "../../../data/constants/pubnub_messagetype";
 import { TOAST_SUCCESS } from "../../../data/constants/toastmessagetype";
 import { ShowMessage } from "../../../data/message/showMessage";
@@ -23,10 +24,12 @@ import {
   Card_Lobby_Initials,
   Card_Game_Initials
 } from "../../../data/constants/constants";
+import { ROUTE_SITE_BOARD } from "../../../data/constants/routes";
 
 export class GameInit extends Component {
   constructor(props) {
     super(props);
+
 
     this.initPubNub();
     this.roomId = null;
@@ -101,7 +104,7 @@ export class GameInit extends Component {
           break;
         case PUBNUB_DECKSELECT:
           this.displayRoomStatusModal(this.roomId, msg.isRoomCreator);
-           message = this.generateMessageObj(PUBNUB_MESSAGE_BROADCAST, {
+          message = this.generateMessageObj(PUBNUB_MESSAGE_BROADCAST, {
             data: "New Player Joined",
             type: TOAST_SUCCESS
           });
@@ -109,9 +112,9 @@ export class GameInit extends Component {
           break;
 
         case PUBNUB_DECKLEAVE:
-           message = this.generateMessageObj(PUBNUB_MESSAGE_BROADCAST, {
+          message = this.generateMessageObj(PUBNUB_MESSAGE_BROADCAST, {
             data: "One Player Left",
-            type: TOAST_SUCCESS
+            type: TOAST_SUCCESS,
           });
 
           this.publishMessage(this.lobbyChannel, message);
@@ -119,7 +122,7 @@ export class GameInit extends Component {
           break;
 
         case PUBNUB_GAMECLOSE:
-           message = this.generateMessageObj(PUBNUB_MESSAGE_BROADCAST, {
+          message = this.generateMessageObj(PUBNUB_MESSAGE_BROADCAST, {
             data: "Sorry!! Game was closed by admin",
             type: TOAST_SUCCESS
           });
@@ -128,6 +131,10 @@ export class GameInit extends Component {
 
           Swal.close();
           this.unsubscribe();
+          break;
+        case PUBNUB_GAMESTART:
+          Swal.close();
+          this.redirectToBoard();
           break;
 
         case PUBNUB_MESSAGE_BROADCAST:
@@ -138,6 +145,14 @@ export class GameInit extends Component {
       }
     }
   };
+
+  redirectToBoard = () => {
+    let url = replaceParam(ROUTE_SITE_BOARD, {
+      gamecode: this.roomId
+    });
+
+    this.props.history.push(url);
+  }
 
   showChooseDeckOption = async () => {
     const decks = await this.getDeckList(this.roomId);
@@ -194,12 +209,10 @@ export class GameInit extends Component {
     let decks = await this.getDeckList(roomId);
     let isSelectedCount = 0;
     let swalliData = "";
-    //debugger;
-    decks.map((deck, index) => {
+    let mapData = decks.map((deck, index) => {
       let extraClass = deck.isselected
         ? "fa fa-check success"
         : "fa fa-question pending";
-        debugger;
       if (deck.isselected) isSelectedCount += 1;
       swalliData += `
                 <li class='list-group-item ' key=${deck.id}>
@@ -209,6 +222,8 @@ export class GameInit extends Component {
                     </div>
                 </li> `;
     });
+
+    console.log(mapData);
 
     let swalHtml = ` <div className="game-room">
                                 <div className="row room-header">
@@ -239,19 +254,35 @@ export class GameInit extends Component {
         : '<i class="fa fa-thumbs-down"></i> Leave',
       confirmButtonText: "Start Game",
       footer:
-        this.state.isRoomCreator == true
+        this.state.isRoomCreator === true
           ? ""
           : "<span>Awaiting room creator confirmation</span>"
     }).then(result => {
       if (result.value) {
         //deckID = result.value;
-        console.log(result.value);
+        if (this.state.isRoomCreator)
+          this.onGameStart(this.roomId);
+        else {
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: "Unauthorized attempt to start game",
+            showCancelButton: true,
+            cancelButtonText: "Leave Game"
+          }).then((result) => {
+            if (result.value) {
+              this.displayRoomStatusModal(this.roomId, this.state.isRoomCreator);
+            }
+            else {
+              this.onGameLeave(this.roomId, this.state.deckid);
+            }
+          });
+        }
+
       } else if (result.dismiss === "cancel") {
         if (this.state.isRoomCreator) {
-          alert("close called");
           this.onGameClose(this.roomId);
         } else {
-          alert("leave called");
           this.onGameLeave(this.roomId, this.state.deckid);
         }
       }
@@ -350,7 +381,6 @@ export class GameInit extends Component {
     };
 
     await gameactionlist.gameinit(paramObj, async result => {
-      let data = result.data;
       this.setState({ isRoomCreator: true, deckid: deckID });
       this.displayRoomStatusModal(this.roomId, true);
     });
@@ -375,7 +405,6 @@ export class GameInit extends Component {
         text: output.error
       });
     } else {
-      let decks = output.decklist;
       this.setState({ isRoomCreator: false });
       this.displayRoomStatusModal(this.roomId, false);
       this.pubnub.publish(
@@ -429,8 +458,6 @@ export class GameInit extends Component {
         if (response.totalOccupancy < 4) {
           this.subscribeChannel(this.lobbyChannel);
 
-          //   await  this.getDeckList(this.roomId);
-          //   debugger;
           this.showChooseDeckOption();
         } else {
           // Game in progress
@@ -474,7 +501,6 @@ export class GameInit extends Component {
         text: output.error
       });
     } else {
-      let decks = output.decklist;
       this.setState({ isRoomCreator: false });
       this.displayRoomStatusModal(this.roomId, false);
       this.pubnub.publish(
@@ -559,6 +585,40 @@ export class GameInit extends Component {
         },
         (status, response) => { }
       );
+    }
+  };
+
+  onGameStart = async roomId => {
+    var userData = GetUserData();
+    var userID = userData.userid;
+    let paramObj = {
+      userid: userID,
+      gameid: roomId
+    };
+
+    let result = await gameactionlist.startgame(paramObj); //, async result => {
+    let output = result.data.gamedata;
+    if (output.proceed === false) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: output.error
+      });
+    } else {
+
+      this.pubnub.publish(
+        {
+          message: {
+            type: PUBNUB_GAMESTART
+          },
+          channel: this.lobbyChannel
+        },
+        (status, response) => {
+         // Swal.close();
+        }
+      );
+
+
     }
   };
 

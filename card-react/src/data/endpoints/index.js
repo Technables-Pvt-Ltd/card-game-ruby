@@ -5,7 +5,8 @@ import {
     ROUTE_API_INITGAME,
     ROUTE_API_JOINGAME,
     ROUTE_API_LEAVEGAME,
-    ROUTE_API_CLOSEGAME
+    ROUTE_API_CLOSEGAME,
+    ROUTE_API_STARTGAME
 } from '../constants/apiroutes'
 
 export default {
@@ -16,6 +17,7 @@ export default {
         JOIN_GAME: GenerateDeckURI(ROUTE_API_JOINGAME),
         LEAVE_GAME: GenerateDeckURI(ROUTE_API_LEAVEGAME),
         CLOSE_GAME: GenerateDeckURI(ROUTE_API_CLOSEGAME),
+        START_GAME: GenerateDeckURI(ROUTE_API_STARTGAME),
     }
 }
 

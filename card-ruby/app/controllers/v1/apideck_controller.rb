@@ -4,7 +4,9 @@ require "sqlite3"
 class V1::ApideckController < ApplicationController
   include DbController
 
-  #db = SQLite3::Database.new
+  ####################################################
+  ############## API HELPER METHODS ##################
+  ####################################################
 
   def index
     message = MSG_API_WELCOME
@@ -52,21 +54,12 @@ class V1::ApideckController < ApplicationController
       proceed = true
       error = ""
 
-      # db = SQLite3::Database.open "db/card.sqlite3"
-      # db.results_as_hash = true
-
       statement = "select 1 where exists(select 1 from game_decks gd
       inner join card_games cg on gd.gameid = cg.id
        where gd.userid = '#{userid}' and deckid <> #{deckid}
        and isselected = 1 
        and cg.code = '#{code}')"
 
-      # check_user_exists = db.prepare("select 1 where exists(select 1 from game_decks gd
-      #   inner join card_games cg on gd.gameid = cg.id
-      #    where gd.userid = :userid and deckid<> :deckid
-      #    and isselected = 1
-      #    and cg.code = :code)")
-      # decks = check_user_exists.execute :userid => userid, :deckid => deckid, :code => code
       decks = GameDeck.connection.select_all(statement)
       exists = decks.any?
 
@@ -83,29 +76,11 @@ class V1::ApideckController < ApplicationController
           proceed = false
           error = "this deck is already selected"
         else
-          #ActiveRecord::Base.connection.execute("END TRANSACTION; END;")
-          #error = 'udpated'
           update_deck_card = "update game_decks
                     set isselected = 1, userid = '#{userid}'
                     where deckid = #{deckid} and gameid = #{game.id}"
           GameDeck.find_by_sql (update_deck_card)
         end
-
-        # gamedecks = GameDeck.where("gameid=?", game.id)
-
-        # gamedecks.each do |deck|
-        #   error += deck.id.to_s + " "
-        #   if (deck.id == deckid)
-        #     if (deck.isselected == false)
-        #       deck.isselected = true
-        #       deck.userid = userid
-        #       deck.save
-        #     else
-        #       proceed = false
-        #       error = "this deck is already selected"
-        #     end
-        #   end
-        # end
       end
     end
     if proceed
@@ -134,35 +109,20 @@ class V1::ApideckController < ApplicationController
       proceed = true
       error = ""
 
-      # db = SQLite3::Database.open "db/card.sqlite3"
-      # db.results_as_hash = true
-
       check_deck_available = ("select 1 where exists(select 1 from game_decks gd
         where gd.deckid =#{deckid}  and gd.gameid = #{game.id} and isselected=1 and userid = '#{userid}')")
-      taken_cards = GameDeck.connection.select_all(check_deck_available)#.execute :deckid => deckid, :gameid => game.id, :userid => userid
+      taken_cards = GameDeck.connection.select_all(check_deck_available) #.execute :deckid => deckid, :gameid => game.id, :userid => userid
       is_taken = taken_cards.any?
 
       if (is_taken)
         update_deck_card = ("update game_decks
           set isselected = 0, userid = ''
           where deckid = #{deckid} and gameid = #{game.id}")
-          GameDeck.find_by_sql(update_deck_card)#  update_deck_card.execute :deckid => deckid, :gameid => game.id
+        GameDeck.find_by_sql(update_deck_card)
       else
         proceed = false
         error = "sorry!! could not complete the operation "
       end
-
-      # gamedecks.each do |deck|
-      #   if (deck.userid == userid)
-      #     if (deck.isselected == true)
-      #       deck.isselected = false
-      #       deck.userid = ""
-      #       deck.save
-      #     else
-
-      #     end
-      #   end
-      # end
     end
     if proceed
       data = {
@@ -174,7 +134,6 @@ class V1::ApideckController < ApplicationController
         :proceed => proceed, :error => error, :decklist => getGameDeck?(game.id),
       }
       return data
-      #return {proceed: proceed, error: error, decklist = getGameDeck?(gameid)}
     end
   end
 
@@ -196,15 +155,98 @@ class V1::ApideckController < ApplicationController
         # db.results_as_hash = true
 
         delete_game_decks = ("delete from game_decks where gameid = #{game.id}")
-        GameDeck.find_by_sql(delete_game_decks);
+        GameDeck.find_by_sql(delete_game_decks)
         #delete_game_decks.execute :gameid => game.id
 
         delete_card_game = ("delete from card_games where id = #{game.id}")
-        CardGame.find_by_sql(delete_card_game);
+        CardGame.find_by_sql(delete_card_game)
         #delete_card_game.execute :gameid => game.id
       else
         proceed = fase
         error = "close request initiated by non-admin user"
+      end
+    end
+    if proceed
+      data = {
+        :proceed => proceed, :error => error,
+      }
+      #return data
+    else
+      data = {
+        :proceed => proceed, :error => error,
+      }
+    end
+    return data
+  end
+
+  def start_game?(gamecode, userid)
+    proceed = false
+    error = ""
+    games = CardGame.find_by_sql("select id, code, userid from card_games where code = '#{gamecode}' and status = 1")
+    data = nil
+    if (games.length == 0)
+      proceed = false
+      error = "game with the provided code does not exists"
+    else
+      game = games.first()
+      if game.userid == userid
+        proceed = true
+        error = ""
+
+        CardGame.transaction do
+          update_game = CardGame.lock("FOR UPDATE NOWAIT").find_by(code: gamecode)
+          update_game.status = 2
+          update_game.save!
+        end
+
+        #update_card_games = "update card_games set status=2 where id=#{game.id} and userid='#{userid}'"
+        #CardGame.update(game.id, :status=>2);
+        # game.lock!
+        # game.status = 2
+        # game.save!
+
+        #CardGame.find_by_sql(update_card_games)
+
+        # game_decks_query = "select gameid, deckid, userid from game_decks where gameid=#{game.id}"
+        # game_decks = GameDeck.connection.select_all(game_decks_query)
+
+        game_decks = GameDeck.select("gameid, deckid, userid").where(:gameid => game.id, :isselected=>true)
+
+        total_players = game_decks.length
+
+        player_position_master = ["top", "bottom", "right", "left"]
+        player_turn_master = [true, false, false, false]
+
+        player_position = player_position_master[0...total_players].shuffle
+        player_turn = player_turn_master[0...total_players].shuffle
+
+        game_decks.each_with_index do |deck, index|
+          gameid = game.id
+          p_userid = deck.userid
+          deckid = deck.deckid
+          position = player_position[index]
+          health = 10
+          status = 1
+          hasturn = player_turn[index]
+
+          game_player = GamePlayer.create(gameid: gameid, deckid: deckid, userid: p_userid, position: position, health: health, status: status, hasturn: hasturn)
+
+          ### insert into player_card ###
+
+          deck_cards = DeckCard.find_by_sql("select id from deck_cards where deckid = #{deckid}")
+          deck_card = deck_cards.first()
+          playerid = game_player.id
+          cardid = deck_card.id
+          o_deckid = deckid
+          cur_deckid = deckid
+          pile_type = 1 ## 1-> deck, 2->hand, 3->active, 4->discard
+          card_health = 0
+
+          PlayerCard.create(playerid: playerid, cardid: cardid, o_deckid: o_deckid, cur_deckid: cur_deckid, pile_type: pile_type, card_health: card_health)
+        end
+      else
+        proceed = fase
+        error = "game start request initiated by non-admin user"
       end
     end
     if proceed
@@ -244,6 +286,10 @@ class V1::ApideckController < ApplicationController
     decks = GameDeck.connection.select_all(statement)
     return decks
   end
+
+  ####################################################
+  ################### API LIST #######################
+  ####################################################
 
   def init
     check = checkdeckdata()
@@ -416,10 +462,11 @@ class V1::ApideckController < ApplicationController
     end
 
     if proceed
+      data = start_game?(gameid, userid)
       message = MSG_DECK_INITIATED
       success = true
       data = {
-        :data => { gameid: gameid, userid: userid },
+        :data => { gamedata: data },
       }
 
       response_data = ApiResponse.new(message, success, data)

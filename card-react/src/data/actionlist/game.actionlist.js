@@ -8,7 +8,8 @@ export const gameactionlist = {
     decklist,
     joingame,
     leavegame,
-    closegame
+    closegame,
+    startgame
 }
 
 function pubnubint(config) {
@@ -103,6 +104,22 @@ async function leavegame(obj) {
 async function closegame(obj) {
     let result = null;
     await services.closegame(obj).then(
+        res => {
+            if (res && res.data) {
+                let respObj = res.data;
+                if (respObj.success) {
+                    result = respObj.data;
+
+                }
+            }
+        }, err => { console.log(err) }
+    );
+    return result;
+}
+
+async function startgame(obj) {
+    let result = null;
+    await services.startgame(obj).then(
         res => {
             if (res && res.data) {
                 let respObj = res.data;
