@@ -1,0 +1,2 @@
+class PileType < ApplicationRecord
+end

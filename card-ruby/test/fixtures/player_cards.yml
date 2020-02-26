@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  playerid: 1
+  cardid: 1
+  o_deckid: 1
+  cur_deckid: 1
+  pile_type: 1
+  card_health: 1
+
+two:
+  playerid: 1
+  cardid: 1
+  o_deckid: 1
+  cur_deckid: 1
+  pile_type: 1
+  card_health: 1

@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  gameid: 1
+  userid: MyString
+  deckid: 1
+  position: MyString
+  health: 1
+  status: 1
+  hasturn: false
+
+two:
+  gameid: 1
+  userid: MyString
+  deckid: 1
+  position: MyString
+  health: 1
+  status: 1
+  hasturn: false

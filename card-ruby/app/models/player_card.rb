@@ -1,0 +1,2 @@
+class PlayerCard < ApplicationRecord
+end
