@@ -210,7 +210,7 @@ class V1::ApideckController < ApplicationController
         # game_decks_query = "select gameid, deckid, userid from game_decks where gameid=#{game.id}"
         # game_decks = GameDeck.connection.select_all(game_decks_query)
 
-        game_decks = GameDeck.select("gameid, deckid, userid").where(:gameid => game.id, :isselected=>true)
+        game_decks = GameDeck.select("gameid, deckid, userid").where(:gameid => game.id, :isselected => true)
 
         total_players = game_decks.length
 
@@ -234,15 +234,18 @@ class V1::ApideckController < ApplicationController
           ### insert into player_card ###
 
           deck_cards = DeckCard.find_by_sql("select id from deck_cards where deckid = #{deckid}")
-          deck_card = deck_cards.first()
-          playerid = game_player.id
-          cardid = deck_card.id
-          o_deckid = deckid
-          cur_deckid = deckid
-          pile_type = 1 ## 1-> deck, 2->hand, 3->active, 4->discard
-          card_health = 0
+          #deck_card = deck_cards.first()
 
-          PlayerCard.create(playerid: playerid, cardid: cardid, o_deckid: o_deckid, cur_deckid: cur_deckid, pile_type: pile_type, card_health: card_health)
+          deck_cards.shuffle.each do |deck_card|
+            playerid = game_player.id
+            cardid = deck_card.id
+            o_deckid = deckid
+            cur_deckid = deckid
+            pile_type = 1 ## 1-> deck, 2->hand, 3->active, 4->discard
+            card_health = 0
+
+            PlayerCard.create(playerid: playerid, cardid: cardid, o_deckid: o_deckid, cur_deckid: cur_deckid, pile_type: pile_type, card_health: card_health)
+          end
         end
       else
         proceed = fase
