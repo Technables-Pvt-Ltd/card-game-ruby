@@ -151,8 +151,6 @@ class V1::ApideckController < ApplicationController
         proceed = true
         error = ""
 
-        # db = SQLite3::Database.open "db/card.sqlite3"
-        # db.results_as_hash = true
 
         delete_game_decks = ("delete from game_decks where gameid = #{game.id}")
         GameDeck.find_by_sql(delete_game_decks)
@@ -199,17 +197,7 @@ class V1::ApideckController < ApplicationController
           update_game.save!
         end
 
-        #update_card_games = "update card_games set status=2 where id=#{game.id} and userid='#{userid}'"
-        #CardGame.update(game.id, :status=>2);
-        # game.lock!
-        # game.status = 2
-        # game.save!
-
-        #CardGame.find_by_sql(update_card_games)
-
-        # game_decks_query = "select gameid, deckid, userid from game_decks where gameid=#{game.id}"
-        # game_decks = GameDeck.connection.select_all(game_decks_query)
-
+        
         game_decks = GameDeck.select("gameid, deckid, userid").where(:gameid => game.id, :isselected => true)
 
         total_players = game_decks.length
