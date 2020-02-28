@@ -51,7 +51,7 @@ export class GameInit extends Component {
   };
 
   componentWillUnmount() {
-    this.unsubscribe();
+    //this.unsubscribe();
   }
 
   componentDidUpdate() {
@@ -69,6 +69,10 @@ export class GameInit extends Component {
 
     this.lobbyChannel = null;
     this.gameChannel = null;
+
+    // this.props.dispatch(gameactionlist.gamestart({
+    //   roomId: this.roomId, lobbyChannel: this.lobbyChannel, gameChannel: this.gameChannel, isPlaying: false, isDisabled: false
+    // }));
   };
 
   subscribeChannel = channel => {
@@ -99,7 +103,7 @@ export class GameInit extends Component {
     if (msg.type) {
       switch (msg.type) {
         case PUBNUB_JOIN:
-          this.gameChannel = Card_Game_Initials + this.roomId;
+          
           this.subscribeChannel(this.gameChannel);
           break;
         case PUBNUB_DECKSELECT:
@@ -150,6 +154,10 @@ export class GameInit extends Component {
     let url = replaceParam(ROUTE_SITE_BOARD, {
       gamecode: this.roomId
     });
+
+    // this.props.dispatch(gameactionlist.gamestart({
+    //   roomId: this.roomId, lobbyChannel: this.lobbyChannel, gameChannel: this.gameChannel, isPlaying:true, isDisabled:true
+    // }));
 
     this.props.history.push(url);
   }
@@ -329,6 +337,7 @@ export class GameInit extends Component {
     // await this.getDeckList();
     this.roomId = shortid.generate().substring(0, 6);
     this.lobbyChannel = Card_Lobby_Initials + this.roomId;
+    this.gameChannel = Card_Game_Initials + this.roomId;
 
     this.subscribeChannel(this.lobbyChannel);
     const firstDeck = await this.getRandomDeck();
@@ -614,7 +623,7 @@ export class GameInit extends Component {
           channel: this.lobbyChannel
         },
         (status, response) => {
-         // Swal.close();
+          // Swal.close();
         }
       );
 

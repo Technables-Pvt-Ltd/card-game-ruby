@@ -9,12 +9,20 @@ export const gameactionlist = {
     joingame,
     leavegame,
     closegame,
-    startgame
+    startgame,
+    gamestart,
+    getgamedata
 }
 
 function pubnubint(config) {
     return dispatch => {
         dispatch(dispatchaction.pubnub_init(config));
+    }
+}
+
+function gamestart(config){
+    return dispatch =>{
+        dispatch(dispatchaction.game_start(config));
     }
 }
 
@@ -120,6 +128,22 @@ async function closegame(obj) {
 async function startgame(obj) {
     let result = null;
     await services.startgame(obj).then(
+        res => {
+            if (res && res.data) {
+                let respObj = res.data;
+                if (respObj.success) {
+                    result = respObj.data;
+
+                }
+            }
+        }, err => { console.log(err) }
+    );
+    return result;
+}
+
+async function getgamedata(obj) {
+    let result = null;
+    await services.getgamedata(obj).then(
         res => {
             if (res && res.data) {
                 let respObj = res.data;

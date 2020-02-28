@@ -222,12 +222,12 @@ class V1::ApideckController < ApplicationController
           deck_cards = DeckCard.find_by_sql("select id from deck_cards where deckid = #{deckid}")
           #deck_card = deck_cards.first()
 
-          deck_cards.shuffle.each do |deck_card|
+          deck_cards.shuffle.each_with_index do |deck_card, index|
             playerid = game_player.id
             cardid = deck_card.id
             o_deckid = deckid
             cur_deckid = deckid
-            pile_type = 1 ## 1-> deck, 2->hand, 3->active, 4->discard
+            pile_type = index < 5 ? 2 : 1 ## 1-> deck, 2->hand, 3->active, 4->discard
             card_health = 0
 
             PlayerCard.create(playerid: playerid, cardid: cardid, o_deckid: o_deckid, cur_deckid: cur_deckid, pile_type: pile_type, card_health: card_health)
@@ -287,7 +287,7 @@ class V1::ApideckController < ApplicationController
       error = ""
 
       players = []
-      gameplayers = GamePlayer.connection.select_all("select gp.id as id,dt.name, dt.deckclass, 
+      gameplayers = GamePlayer.connection.select_all("select gp.userid,gp.id as id,dt.name, dt.deckclass, 
         gp.position, gp.hasturn, gp.health, gp.status
         from game_players gp
         inner join deck_data dt on gp.deckid = dt.id
@@ -323,17 +323,18 @@ class V1::ApideckController < ApplicationController
         end
 
         players << {
+          userid: player.userid,
           playerid: player.id,
           name: player.name,
           deckclass: player.deckclass,
-          postion: player.position,
-          hasturn: player.hasturn, 
-          health: player.health, 
+          position: player.position,
+          hasturn: player.hasturn,
+          health: player.health,
           status: player.status,
           deck_pile: deck_pile_cards,
           hand_pile: hand_pile_cards,
           active_pile: active_pile_cards,
-          discard_pile: discard_pile_cards
+          discard_pile: discard_pile_cards,
         }
       end
     end
@@ -556,7 +557,7 @@ class V1::ApideckController < ApplicationController
       message = MSG_GAME_PLAYGING
       success = true
       data = {
-        :data => { gamedata: data },
+        :gamedata => data,
       }
 
       response_data = ApiResponse.new(message, success, data)
