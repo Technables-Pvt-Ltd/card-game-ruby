@@ -52,16 +52,7 @@
 
 } */
 
-.player-data {
-    align-items: center;
-    vertical-align: middle;
-    display: inherit;
-}
 
-.left .player-data,
-.right .player-data {
-    padding: 10px 0;
-}
 
 
 
@@ -123,8 +114,22 @@
     text-transform: uppercase;
 }
 
+.player-data {
+    align-items: center;
+    vertical-align: middle;
+    display: inherit;
+    padding: 15px;
+    height: 60px;
+    border-radius: 15px;
+    position: relative;
+    
+}
+
+.player-data .name-title{
+    color: #fff;
+}
+
 .card-count {
-    background: #f36f21;
     border: 1px solid #ffffff;
     border-radius: 50%;
     color: #ffffff;
@@ -137,4 +142,5 @@
     top: 0px;
     width: 20px;
     font-size: 10px;
+    font-weight: bold;
 }
