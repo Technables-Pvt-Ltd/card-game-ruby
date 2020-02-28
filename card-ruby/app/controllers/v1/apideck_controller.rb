@@ -1,5 +1,5 @@
 require "db_controller"
-require "sqlite3"
+require "open_struct"
 
 class V1::ApideckController < ApplicationController
   include DbController
@@ -110,8 +110,8 @@ class V1::ApideckController < ApplicationController
       error = ""
 
       check_deck_available = ("select 1 where exists(select 1 from game_decks gd
-        where gd.deckid =#{deckid}  and gd.gameid = #{game.id} and isselected=1 and userid = '#{userid}')")
-      taken_cards = GameDeck.connection.select_all(check_deck_available) #.execute :deckid => deckid, :gameid => game.id, :userid => userid
+        where gd.deckid =#{deckid}  and gd.gameid = #{game.id} and isselected = 1 and userid = '#{userid}')")
+      taken_cards = GameDeck.connection.select_all(check_deck_available)
       is_taken = taken_cards.any?
 
       if (is_taken)
@@ -150,7 +150,6 @@ class V1::ApideckController < ApplicationController
       if game.userid == userid
         proceed = true
         error = ""
-
 
         delete_game_decks = ("delete from game_decks where gameid = #{game.id}")
         GameDeck.find_by_sql(delete_game_decks)
@@ -197,7 +196,6 @@ class V1::ApideckController < ApplicationController
           update_game.save!
         end
 
-        
         game_decks = GameDeck.select("gameid, deckid, userid").where(:gameid => game.id, :isselected => true)
 
         total_players = game_decks.length
@@ -254,14 +252,11 @@ class V1::ApideckController < ApplicationController
   end
 
   def getGameDeck?(gameid)
-    # db = SQLite3::Database.open "db/card.sqlite3"
-    # db.results_as_hash = true
     statememt = "select dt.id, dt.name, gd.isselected , gd.userid
       from game_decks gd 
       Inner Join deck_data dt 
         on dt.id = gd.deckid  where gd.gameid = #{gameid}"
     decks = GameDeck.connection.select_all(statememt)
-    #decks = GameDeck.select("dt.id, dt.name, game_decks.isselected").joins("Inner Join deck_data dt on dt.id = game_decks.deckid").where(gameid: gameid)
     return decks
   end
 
@@ -276,6 +271,83 @@ class V1::ApideckController < ApplicationController
 
     decks = GameDeck.connection.select_all(statement)
     return decks
+  end
+
+  def get_GameData?(gamecode)
+    proceed = false
+    error = ""
+    games = CardGame.find_by_sql("select id, code, status from card_games where code = '#{gamecode}' and status = 2")
+    data = nil
+    if (games.length == 0)
+      proceed = false
+      error = "game with the provided code does not exists"
+    else
+      game = games.first()
+      proceed = true
+      error = ""
+
+      players = []
+      gameplayers = GamePlayer.connection.select_all("select gp.id as id,dt.name, dt.deckclass, 
+        gp.position, gp.hasturn, gp.health, gp.status
+        from game_players gp
+        inner join deck_data dt on gp.deckid = dt.id
+        where gp.gameid = #{game.id}")
+
+      gameplayers.each do |playerObj|
+        player = OpenStruct.new(playerObj)
+        deck_pile = PlayerCard.connection.select_all("select cardid, dc.name, pc.card_health,
+          pc.o_deckid, pc.cur_deckid, pc.pile_type from player_cards pc
+          inner join deck_cards dc on pc.cardid = dc.id
+          where playerid = #{player.id}")
+
+        deck_pile_cards = []
+        hand_pile_cards = []
+        active_pile_cards = []
+        discard_pile_cards = []
+        deck_pile.each do |cardObj|
+          card = OpenStruct.new(cardObj)
+          card_effects = CardEffectsMap.connection.select_all("select cem.id, ce.name, ce.effectclass,
+            cem.count from card_effects_maps cem
+            inner join card_effects ce on cem.effectid = ce.id
+            where cem.cardid = #{card.cardid}")
+
+          if (card.pile_type == 1)
+            deck_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects }
+          elsif card.pile_type == 2
+            hand_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects }
+          elsif card.pile_type == 2
+            active_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects }
+          else
+            discard_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects }
+          end
+        end
+
+        players << {
+          playerid: player.id,
+          name: player.name,
+          deckclass: player.deckclass,
+          postion: player.position,
+          hasturn: player.hasturn, 
+          health: player.health, 
+          status: player.status,
+          deck_pile: deck_pile_cards,
+          hand_pile: hand_pile_cards,
+          active_pile: active_pile_cards,
+          discard_pile: discard_pile_cards
+        }
+      end
+    end
+    if proceed
+      result = {
+        :proceed => proceed, :error => error, players: players,
+      }
+      #return data
+    else
+      result = {
+        :proceed => proceed, :error => error, players: [],
+      }
+    end
+    return result
   end
 
   ####################################################
@@ -454,7 +526,34 @@ class V1::ApideckController < ApplicationController
 
     if proceed
       data = start_game?(gameid, userid)
-      message = MSG_DECK_INITIATED
+      message = MSG_GAME_STARTED
+      success = true
+      data = {
+        :data => { gamedata: data },
+      }
+
+      response_data = ApiResponse.new(message, success, data)
+    else
+      response_data = ApiResponse.new(err_msg, proceed, nil)
+    end
+    render json: response_data, status: STATUS_OK
+  end
+
+  def getGameData
+    gamecode = params[:gamecode]
+
+    status = STATUS_OK
+    proceed = true
+    err_msg = ""
+    if (!params[:gamecode].present?) || gamecode.nil?
+      proceed = false
+      err_msg = MSG_PARAM_MISSING
+      status = STATUS_NOT_FOUND
+    end
+
+    if proceed
+      data = get_GameData?(gamecode)
+      message = MSG_GAME_PLAYGING
       success = true
       data = {
         :data => { gamedata: data },
