@@ -200,7 +200,7 @@ class V1::ApideckController < ApplicationController
 
         total_players = game_decks.length
 
-        player_position_master = ["top", "bottom", "right", "left"]
+        player_position_master = [0, 1, 2, 3]
         player_turn_master = [true, false, false, false]
 
         player_position = player_position_master[0...total_players].shuffle
@@ -295,15 +295,20 @@ class V1::ApideckController < ApplicationController
 
       gameplayers.each do |playerObj|
         player = OpenStruct.new(playerObj)
+
+        deck_pile_count = 0
+        discard_pile_count = 0
+
+        deck_pile_count = PlayerCard.where(:playerid => player.id, :pile_type => 1).count
+        discard_pile_count = PlayerCard.where(:playerid => player.id, :pile_type => 4).count
+
         deck_pile = PlayerCard.connection.select_all("select cardid, dc.name, pc.card_health,
           pc.o_deckid, pc.cur_deckid, pc.pile_type from player_cards pc
           inner join deck_cards dc on pc.cardid = dc.id
           where playerid = #{player.id}")
 
-        deck_pile_cards = []
         hand_pile_cards = []
         active_pile_cards = []
-        discard_pile_cards = []
         deck_pile.each do |cardObj|
           card = OpenStruct.new(cardObj)
           card_effects = CardEffectsMap.connection.select_all("select cem.id, ce.name, ce.effectclass,
@@ -311,14 +316,10 @@ class V1::ApideckController < ApplicationController
             inner join card_effects ce on cem.effectid = ce.id
             where cem.cardid = #{card.cardid}")
 
-          if (card.pile_type == 1)
-            deck_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects }
-          elsif card.pile_type == 2
+          if card.pile_type == 2
             hand_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects }
-          elsif card.pile_type == 2
+          elsif card.pile_type == 3
             active_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects }
-          else
-            discard_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects }
           end
         end
 
@@ -331,10 +332,10 @@ class V1::ApideckController < ApplicationController
           hasturn: player.hasturn,
           health: player.health,
           status: player.status,
-          deck_pile: deck_pile_cards,
+          deck_pile_count: deck_pile_count,
           hand_pile: hand_pile_cards,
           active_pile: active_pile_cards,
-          discard_pile: discard_pile_cards,
+          discard_pile_count: discard_pile_count,
         }
       end
     end
@@ -351,6 +352,45 @@ class V1::ApideckController < ApplicationController
     return result
   end
 
+  def get_playercard?(playerid)
+    deck_pile = PlayerCard.connection.select_all("select cardid, dc.name, pc.card_health,
+          pc.o_deckid, pc.cur_deckid, pc.pile_type from player_cards pc
+          inner join deck_cards dc on pc.cardid = dc.id
+          where playerid = #{playerid}")
+
+    #deck_pile_cards = []
+    hand_pile_cards = []
+    active_pile_cards = []
+    #discard_pile_cards = []
+    deck_pile.each do |cardObj|
+      card = OpenStruct.new(cardObj)
+      card_effects = CardEffectsMap.connection.select_all("select cem.id, ce.name, ce.effectclass,
+            cem.count from card_effects_maps cem
+            inner join card_effects ce on cem.effectid = ce.id
+            where cem.cardid = #{card.cardid}")
+
+      if card.pile_type == 2
+        hand_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects }
+      elsif card.pile_type == 3
+        active_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects }
+      end
+    end
+
+    deck_pile_count = 0
+    discard_pile_count = 0
+
+    deck_pile_count = PlayerCard.where(:playerid => playerid, :pile_type => 1).count
+    discard_pile_count = PlayerCard.where(:playerid => playerid, :pile_type => 4).count
+
+    playercard = {
+      :deck_pile_count => deck_pile_count,
+      :discard_pile_count => discard_pile_count,
+      :hand_pile => hand_pile_cards,
+      :active_pile => active_pile_cards,
+    }
+    return playercard
+  end
+
   ####################################################
   ################### API LIST #######################
   ####################################################
@@ -363,7 +403,6 @@ class V1::ApideckController < ApplicationController
     success = true
     data = {
       :deck => decks,
-      :check => check,
     }
 
     response_data = ApiResponse.new(message, success, data)
@@ -558,6 +597,33 @@ class V1::ApideckController < ApplicationController
       success = true
       data = {
         :gamedata => data,
+      }
+
+      response_data = ApiResponse.new(message, success, data)
+    else
+      response_data = ApiResponse.new(err_msg, proceed, nil)
+    end
+    render json: response_data, status: STATUS_OK
+  end
+
+  def getplayercard
+    playerid = params[:playerid]
+
+    status = STATUS_OK
+    proceed = true
+    err_msg = ""
+    if (!params[:playerid].present?) || playerid.nil?
+      proceed = false
+      err_msg = MSG_PARAM_MISSING
+      status = STATUS_NOT_FOUND
+    end
+
+    if proceed
+      data = get_playercard?(playerid)
+      message = MSG_GAME_PLAYGING
+      success = true
+      data = {
+        :playercard => data,
       }
 
       response_data = ApiResponse.new(message, success, data)

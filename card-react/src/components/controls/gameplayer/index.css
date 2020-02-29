@@ -1,0 +1,45 @@
+.deck-card {
+    width: 70px;
+    height: 100px;
+    margin: auto 5px;
+    border-radius: 8px;
+    display: flex;
+    align-items: flex-end;
+    padding: 5px;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.deck-card .card-name{
+    font-size: 10px;
+    color: #fff;
+    text-align: center;
+    width: 100%;
+    
+}
+
+.effect {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.effect-wrapper {
+    display: inherit;
+    margin-bottom: 3px;
+}
+
+.eff-icon {
+    color: #fff;
+    font-size: 10px;
+    margin: 2px;
+}
+
+.deck-card.clicked {
+    margin-top: -15px;
+    -webkit-box-shadow: 0px 0px 16px 4px rgba(173, 173, 173, 1);
+    -moz-box-shadow: 0px 0px 16px 4px rgba(173, 173, 173, 1);
+    box-shadow: 0px 0px 16px 4px rgba(173, 173, 173, 1);
+}

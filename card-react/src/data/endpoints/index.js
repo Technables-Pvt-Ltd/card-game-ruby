@@ -7,7 +7,8 @@ import {
     ROUTE_API_LEAVEGAME,
     ROUTE_API_CLOSEGAME,
     ROUTE_API_STARTGAME,
-    ROUTE_API_GETGAMEDATA
+    ROUTE_API_GETGAMEDATA,
+    ROUTE_API_GETPLAYERCARD
 } from '../constants/apiroutes'
 
 export default {
@@ -19,7 +20,8 @@ export default {
         LEAVE_GAME: GenerateDeckURI(ROUTE_API_LEAVEGAME),
         CLOSE_GAME: GenerateDeckURI(ROUTE_API_CLOSEGAME),
         START_GAME: GenerateDeckURI(ROUTE_API_STARTGAME),
-        GET_GAME: GenerateDeckURI(ROUTE_API_GETGAMEDATA)
+        GET_GAME: GenerateDeckURI(ROUTE_API_GETGAMEDATA),
+        GET_PLAYER_CARD: GenerateDeckURI(ROUTE_API_GETPLAYERCARD)
     }
 }
 

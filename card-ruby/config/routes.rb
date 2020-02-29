@@ -16,6 +16,7 @@ Rails.application.routes.draw do
     get "deck/close", to: 'apideck#closegame'
     get "deck/start", to: 'apideck#startgame'
     get "deck/getgamedata", to: 'apideck#getGameData'
+    get "deck/getplayercard", to: 'apideck#getplayercard'
   end
 
   root 'home#index'

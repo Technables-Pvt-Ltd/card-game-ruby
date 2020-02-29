@@ -57,7 +57,8 @@
 
 
 
-.left .pile, .right .pile {
+.left .pile,
+.right .pile {
     height: 60px;
     width: 80px;
 }
@@ -97,11 +98,11 @@
 }
 
 .hand.mine {
-    height: 60px;
-    width: 80%;
+    height: 110px;
+    width: 90%;
     position: relative;
     background: transparent;
-    
+
 
 }
 
@@ -122,11 +123,18 @@
     height: 60px;
     border-radius: 15px;
     position: relative;
-    
+
 }
 
-.player-data .name-title{
+.player-data.playing {
+    -webkit-box-shadow: 0px 0px 16px 4px rgba(173, 173, 173, 1);
+    -moz-box-shadow: 0px 0px 16px 4px rgba(173, 173, 173, 1);
+    box-shadow: 0px 0px 16px 4px rgba(173, 173, 173, 1);
+}
+
+.player-data .name-title {
     color: #fff;
+    font-weight: 600;
 }
 
 .card-count {
@@ -141,6 +149,19 @@
     text-transform: uppercase;
     top: 0px;
     width: 20px;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: bold;
+}
+
+.player-container {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.playing-title {
+    color: #fff;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 10px;
 }

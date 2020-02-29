@@ -5,13 +5,17 @@ export const gameactionlist = {
     pubnubint,
     deckinit,
     gameinit,
+    dispatchPlayerdata,
+    dispatchPlayerCard,
     decklist,
     joingame,
     leavegame,
     closegame,
     startgame,
     gamestart,
-    getgamedata
+    getgamedata,
+    getPlayerCard,
+    
 }
 
 function pubnubint(config) {
@@ -20,11 +24,25 @@ function pubnubint(config) {
     }
 }
 
-function gamestart(config){
-    return dispatch =>{
+function gamestart(config) {
+    return dispatch => {
         dispatch(dispatchaction.game_start(config));
     }
 }
+
+function dispatchPlayerdata(playerObj) {
+    return dispatch => {
+        dispatch(dispatchaction.dispatch_playerdata(playerObj))
+    }
+}
+
+function dispatchPlayerCard(playerObj) {
+    return dispatch => {
+        dispatch(dispatchaction.dispatch_playercard(playerObj))
+    }
+}
+
+
 
 function deckinit(obj, bindingResult) {
     services.initdeck(obj).then(
@@ -154,6 +172,21 @@ async function getgamedata(obj) {
             }
         }, err => { console.log(err) }
     );
+    return result;
+}
+
+async function getPlayerCard  (obj) {
+    let result = null;
+    await services.getplayerdata(obj).then(
+        res => {
+            if (res && res.data) {
+                let respObj = res.data;
+                if (respObj.success)
+                    result = respObj.data;
+            }
+        }, err => { console.log(err) }
+    )
+
     return result;
 }
 

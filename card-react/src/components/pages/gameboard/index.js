@@ -6,22 +6,97 @@ import Aux from '../../../hoc/_Aux';
 import { GetUserData } from '../../../data/helper';
 import './index.css'
 import GamePlayer from '../../controls/gameplayer'
+import { Card_Game_Initials } from '../../../data/constants/constants';
+
+import PubNubReact from "pubnub-react";
+import { PUBNUB_PUBLISH_KEY, PUBNUB_SUBSCRIBE_KEY } from '../../../data/constants/pubnub';
+import { PUBNUB_MESSAGE_BROADCAST, PUBNUB_THROW_CARD } from '../../../data/constants/pubnub_messagetype';
+import { ShowMessage } from '../../../data/message/showMessage';
 
 export class Board extends Component {
     constructor(props) {
         super(props);
+
+        this.initPubNub();
         const { match } = this.props;
         const { gamecode } = match.params;
-        this.state = {
-            gamecode,
-            players: []
+        this.roomId = gamecode;
+        this.gameChannel = Card_Game_Initials + gamecode;
+        this.subscribeChannel(this.gameChannel);
+
+    }
+
+    initPubNub = () => {
+        this.pubnub = new PubNubReact({
+            publishKey: PUBNUB_PUBLISH_KEY,
+            subscribeKey: PUBNUB_SUBSCRIBE_KEY
+        });
+        this.state = {};
+        this.pubnub.init(this);
+    };
+
+    handleCardClick = (cardid) => {
+        this.pubnub.publish(
+            {
+                message: {
+                    type: PUBNUB_THROW_CARD,
+                    data: cardid
+                },
+                channel: this.gameChannel
+            },
+            (status, response) => { }
+        );
+        this.setState({ cardid: cardid })
+    }
+
+    subscribeChannel = channel => {
+        this.pubnub.subscribe({
+            channels: [channel],
+            withPresence: true
+        });
+    };
+
+    componentDidUpdate() {
+
+        if (this.gameChannel !== null) {
+            this.pubnub.getMessage(this.gameChannel, msg => {
+                this.handlePubNubMessage(msg.message);
+            });
         }
-        this.getGameData();
+
+    }
+
+    handlePubNubMessage = msg => {
+        if (msg.type) {
+            switch (msg.type) {
+                case PUBNUB_THROW_CARD:
+
+                    break;
+
+
+                case PUBNUB_MESSAGE_BROADCAST:
+                    ShowMessage(msg.message.type, msg.message.data);
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+
+    componentDidMount = async () => {
+
+        // if (this.gameChannel !== null) {
+        //     this.pubnub.getMessage(this.gameChannel, msg => {
+        //         this.handlePubNubMessage(msg.message);
+        //     });
+        // }
+        await this.getGameData();
+
     }
 
     getGameData = async () => {
         let paramObj = {
-            gamecode: this.state.gamecode
+            gamecode: this.roomId
         }
         let result = await gameactionlist.getgamedata(paramObj);
         let gameObj = result.gamedata;
@@ -35,71 +110,106 @@ export class Board extends Component {
             });
         }
         else {
-            this.setState({
-                players: gameObj.players
-            })
+
+            this.setState({ players: gameObj.players })
+
+            let players = gameObj.players
+
+            let topPlayer = null;
+            let bottomPlayer = null;
+            let rightPlayer = null;
+            let leftPlayer = null;
+            let currentPlayerIndex = 0;
+
+            const userData = GetUserData();
+            let userid = userData.userid;
+
+            players.map((player, index) => {
+                if (player.userid === userid) {
+                    currentPlayerIndex = index;
+                }
+
+            });
+
+            let i = 0;
+            while (i < players.length) {
+                let player = players[(i + currentPlayerIndex) % 4]
+                switch (i) {
+                    case 0:
+                        bottomPlayer = player
+                        bottomPlayer.positionClass = 'bottom'
+                        break;
+                    case 2:
+                        topPlayer = player
+                        topPlayer.positionClass = 'top'
+                        break;
+                    case 3:
+                        rightPlayer = player
+                        rightPlayer.positionClass = 'right'
+                        break;
+                    case 1: leftPlayer = player;
+                        leftPlayer.positionClass = 'left'
+                        break;
+                    default: break;
+                }
+                i++;
+            }
+            this.props.dispatch(gameactionlist.dispatchPlayerdata({
+                roomId: this.roomId, lobbyChannel: this.lobbyChannel, isPlaying: true, isDisabled: true,
+                topPlayer: topPlayer, bottomPlayer: bottomPlayer, leftPlayer: leftPlayer, rightPlayer: rightPlayer
+            }));
+
+
+            // this.setState({ isPlaying: true })
         }
 
 
     }
+
+    getPlayerCard = async (playerid) => {
+
+        let paramObj = {
+            playerid: playerid
+        }
+
+
+    }
+
     render() {
-        let players = this.state.players
-
-        let topPlayer = null;
-        let bottomPlayer = null;
-        let rightPlayer = null;
-        let leftPlayer = null;
-        let currentPlayerIndex = 0;
-
-        const userData = GetUserData();
-        let userid = userData.userid;
-
-        players.map((player, index) => {
-            switch (player.position) {
-                case 'top': topPlayer = player; break;
-                case 'bottom': bottomPlayer = player; break;
-                case 'right': rightPlayer = player; break;
-                case 'left': leftPlayer = player; break;
-                default: break;
-            }
-
-            if (player.userid === userid)
-                currentPlayerIndex = index;
-
-        });
-
-        
-
+        const { topPlayer, bottomPlayer, leftPlayer, rightPlayer } = this.props.cardgame;
         return (
             <Aux>
-                <div className="row player-row">
-                    <div className="col-3"></div>
-                    <div className="col-6 text-center">
-                        {topPlayer && (<GamePlayer player={topPlayer} />)}
+                {bottomPlayer && (<div>
+                    <div className="row player-row">
+                        <div className="col-3"></div>
+                        <div className="col-6 text-center">
+                            {topPlayer && (<GamePlayer player={topPlayer} />)}
+                        </div>
+                        <div className="col-3"></div>
                     </div>
-                    <div className="col-3"></div>
-                </div>
 
-                <div className="row player-row">
-                    <div className="col-3 text-right">
-                        {leftPlayer && (<GamePlayer player={leftPlayer} />)}
+                    <div className="row player-row">
+                        <div className="col-3 text-right">
+                            {leftPlayer && (<GamePlayer player={leftPlayer} />)}
+                        </div>
+                        <div className="col-6 text-center">
+                            <div className="game-board"></div>
+                        </div>
+                        <div className="col-3 text-left">
+                            {rightPlayer && (<GamePlayer player={rightPlayer} />)}
+                        </div>
                     </div>
-                    <div className="col-6 text-center">
-                        <div className="game-board"></div>
-                    </div>
-                    <div className="col-3 text-left">
-                        {rightPlayer && (<GamePlayer player={rightPlayer} />)}
-                    </div>
-                </div>
 
-                <div className="row player-row">
-                    <div className="col-3"></div>
-                    <div className="col-6 text-center">
-                        {bottomPlayer && (<GamePlayer player={bottomPlayer} />)}
+                    <div className="row player-row">
+                        <div className="col-3"></div>
+                        <div className="col-6 text-center">
+                            {bottomPlayer && (<GamePlayer player={bottomPlayer}
+                                gamecode={this.props.cardgame.roomId}
+                                handleCardClickMaster={this.handleCardClick} />)}
+                        </div>
+                        <div className="col-3"></div>
                     </div>
-                    <div className="col-3"></div>
-                </div>
-
+                </div>)}
             </Aux>
         )
     }
@@ -109,8 +219,5 @@ const mapStateToProps = (state) => {
     return state;
 }
 
-const mapDispatchToProps = {
 
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(Board)
+export default connect(mapStateToProps)(Board)

@@ -9,7 +9,8 @@ export const services = {
   leavegame,
   closegame,
   startgame,
-  getgamedata
+  getgamedata,
+  getplayerdata
 }
 
 const deckEndPoint = EndPoints.DECKAPI;
@@ -107,3 +108,14 @@ async function getgamedata(obj) {
 
   return response;
 }
+
+async function getplayerdata(obj) {
+  let axiosConfig = getHeader();
+  var response = null;
+
+  let url = deckEndPoint.GET_PLAYER_CARD + `?playerid=${obj.playerid}`;
+  response = await axios.get(url, obj, axiosConfig);
+
+  return response;
+}
+
