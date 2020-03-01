@@ -15,6 +15,8 @@ export const gameactionlist = {
     gamestart,
     getgamedata,
     getPlayerCard,
+    throwcard,
+    applycardeffect
     
 }
 
@@ -186,6 +188,36 @@ async function getPlayerCard  (obj) {
             }
         }, err => { console.log(err) }
     )
+
+    return result;
+}
+
+async function throwcard  (obj) {
+    let result = null;
+    await services.throwcard(obj).then(
+        res => {
+            if (res && res.data) {
+                let respObj = res.data;
+                if (respObj.success)
+                    result = respObj.data;
+            }
+        }, err => { console.log(err) }
+    ) 
+
+    return result;
+}
+
+async function applycardeffect(obj) {
+    let result = null;
+    await services.applycardeffect(obj).then(
+        res => {
+            if (res && res.data) {
+                let respObj = res.data;
+                if (respObj.success)
+                    result = respObj.data;
+            }
+        }, err => { console.log(err) }
+    ) 
 
     return result;
 }

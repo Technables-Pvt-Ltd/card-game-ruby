@@ -227,7 +227,7 @@ class V1::ApideckController < ApplicationController
             cardid = deck_card.id
             o_deckid = deckid
             cur_deckid = deckid
-            pile_type = index < 5 ? 2 : 1 ## 1-> deck, 2->hand, 3->active, 4->discard
+            pile_type = index < 5 ? 2 : 1 ## 1-> deck, 2->hand, 3->active, 4->discard, 5-> temp
             card_health = 0
 
             PlayerCard.create(playerid: playerid, cardid: cardid, o_deckid: o_deckid, cur_deckid: cur_deckid, pile_type: pile_type, card_health: card_health)
@@ -278,6 +278,7 @@ class V1::ApideckController < ApplicationController
     error = ""
     games = CardGame.find_by_sql("select id, code, status from card_games where code = '#{gamecode}' and status = 2")
     data = nil
+    temp_pile = []
     if (games.length == 0)
       proceed = false
       error = "game with the provided code does not exists"
@@ -288,10 +289,10 @@ class V1::ApideckController < ApplicationController
 
       players = []
       gameplayers = GamePlayer.connection.select_all("select gp.userid,gp.id as id,dt.name, dt.deckclass, 
-        gp.position, gp.hasturn, gp.health, gp.status
+        gp.position, gp.hasturn, gp.health, gp.status, gp.playcount
         from game_players gp
         inner join deck_data dt on gp.deckid = dt.id
-        where gp.gameid = #{game.id}")
+        where gp.gameid = #{game.id} order by gp.position")
 
       gameplayers.each do |playerObj|
         player = OpenStruct.new(playerObj)
@@ -307,6 +308,7 @@ class V1::ApideckController < ApplicationController
           inner join deck_cards dc on pc.cardid = dc.id
           where playerid = #{player.id}")
 
+        #temp_pile = []
         hand_pile_cards = []
         active_pile_cards = []
         deck_pile.each do |cardObj|
@@ -319,7 +321,9 @@ class V1::ApideckController < ApplicationController
           if card.pile_type == 2
             hand_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects }
           elsif card.pile_type == 3
-            active_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects }
+            active_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects , deckclass: player.deckclass}
+          elsif card.pile_type == 5
+            temp_pile << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects, deckclass: player.deckclass }
           end
         end
 
@@ -332,21 +336,23 @@ class V1::ApideckController < ApplicationController
           hasturn: player.hasturn,
           health: player.health,
           status: player.status,
+          playcount: player.playcount,
           deck_pile_count: deck_pile_count,
           hand_pile: hand_pile_cards,
           active_pile: active_pile_cards,
           discard_pile_count: discard_pile_count,
+          #temp_pile: temp_pile,
         }
       end
     end
     if proceed
       result = {
-        :proceed => proceed, :error => error, players: players,
+        :proceed => proceed, :error => error, players: players, temp_pile: temp_pile,
       }
       #return data
     else
       result = {
-        :proceed => proceed, :error => error, players: [],
+        :proceed => proceed, :error => error, players: [], temp_pile: [],
       }
     end
     return result

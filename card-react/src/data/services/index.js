@@ -10,10 +10,13 @@ export const services = {
   closegame,
   startgame,
   getgamedata,
-  getplayerdata
+  getplayerdata,
+  throwcard,
+  applycardeffect
 }
 
 const deckEndPoint = EndPoints.DECKAPI;
+const cardEndPoint = EndPoints.CARDAPI;
 
 function getHeader() {
 
@@ -114,6 +117,26 @@ async function getplayerdata(obj) {
   var response = null;
 
   let url = deckEndPoint.GET_PLAYER_CARD + `?playerid=${obj.playerid}`;
+  response = await axios.get(url, obj, axiosConfig);
+
+  return response;
+}
+
+async function throwcard(obj) {
+  let axiosConfig = getHeader();
+  var response = null;
+
+  let url = cardEndPoint.THROW_CARD + `?cardid=${obj.cardid}&playerid=${obj.playerid}`;
+  response = await axios.get(url, obj, axiosConfig);
+
+  return response;
+}
+
+async function applycardeffect(obj) {
+  let axiosConfig = getHeader();
+  var response = null;
+
+  let url = cardEndPoint.APPLY_CARD_EFFECT + `?cardid=${obj.cardid}&playerid=${obj.playerid}`;
   response = await axios.get(url, obj, axiosConfig);
 
   return response;

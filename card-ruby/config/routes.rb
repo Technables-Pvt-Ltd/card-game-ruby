@@ -17,6 +17,9 @@ Rails.application.routes.draw do
     get "deck/start", to: 'apideck#startgame'
     get "deck/getgamedata", to: 'apideck#getGameData'
     get "deck/getplayercard", to: 'apideck#getplayercard'
+
+    get "card/throwcard", to:'apicard#throwcard'
+    get "card/applycardeffect", to: 'apicard#applycardeffect'
   end
 
   root 'home#index'

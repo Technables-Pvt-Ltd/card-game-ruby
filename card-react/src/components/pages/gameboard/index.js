@@ -6,6 +6,7 @@ import Aux from '../../../hoc/_Aux';
 import { GetUserData } from '../../../data/helper';
 import './index.css'
 import GamePlayer from '../../controls/gameplayer'
+import PlayerCard from '../../controls/gameplayer/playercard'
 import { Card_Game_Initials } from '../../../data/constants/constants';
 
 import PubNubReact from "pubnub-react";
@@ -21,6 +22,7 @@ export class Board extends Component {
         const { match } = this.props;
         const { gamecode } = match.params;
         this.roomId = gamecode;
+        this.player = null;
         this.gameChannel = Card_Game_Initials + gamecode;
         this.subscribeChannel(this.gameChannel);
 
@@ -35,18 +37,39 @@ export class Board extends Component {
         this.pubnub.init(this);
     };
 
-    handleCardClick = (cardid) => {
-        this.pubnub.publish(
-            {
-                message: {
-                    type: PUBNUB_THROW_CARD,
-                    data: cardid
+    handleCardClick = async (cardid, playerid) => {
+
+
+        const userData = GetUserData();
+        let userid = userData.userid;
+
+        let paramObj = {
+            cardid: cardid,
+            playerid: playerid
+        }
+
+        let result = await gameactionlist.throwcard(paramObj);
+        let response = result.data.result;
+
+        if (response.updated === true) {
+            this.pubnub.publish(
+                {
+                    message: {
+                        type: PUBNUB_THROW_CARD,
+                        data: { updated: true }
+                    },
+                    channel: this.gameChannel
                 },
-                channel: this.gameChannel
-            },
-            (status, response) => { }
-        );
-        this.setState({ cardid: cardid })
+                (status, response) => { }
+            );
+            this.setState({ cardid: cardid })
+            // this.setState({ cardthrown: true });
+
+            let applyResult = await gameactionlist.applycardeffect(paramObj);
+
+        }
+
+
     }
 
     subscribeChannel = channel => {
@@ -70,7 +93,7 @@ export class Board extends Component {
         if (msg.type) {
             switch (msg.type) {
                 case PUBNUB_THROW_CARD:
-
+                    this.throwcard(msg.data.updated);
                     break;
 
 
@@ -83,6 +106,16 @@ export class Board extends Component {
         }
     };
 
+    throwcard = async (updated) => {
+
+        if (updated === true) {
+            await this.getGameData();
+            //this.setState({ cardthrown: true });
+
+        }
+
+    }
+
     componentDidMount = async () => {
 
         // if (this.gameChannel !== null) {
@@ -91,6 +124,8 @@ export class Board extends Component {
         //     });
         // }
         await this.getGameData();
+
+
 
     }
 
@@ -111,7 +146,7 @@ export class Board extends Component {
         }
         else {
 
-            this.setState({ players: gameObj.players })
+            this.setState({ tempPile: gameObj.temp_pile, players: gameObj.players })
 
             let players = gameObj.players
 
@@ -127,6 +162,7 @@ export class Board extends Component {
             players.map((player, index) => {
                 if (player.userid === userid) {
                     currentPlayerIndex = index;
+                    this.player = player;
                 }
 
             });
@@ -154,6 +190,8 @@ export class Board extends Component {
                 }
                 i++;
             }
+
+
             this.props.dispatch(gameactionlist.dispatchPlayerdata({
                 roomId: this.roomId, lobbyChannel: this.lobbyChannel, isPlaying: true, isDisabled: true,
                 topPlayer: topPlayer, bottomPlayer: bottomPlayer, leftPlayer: leftPlayer, rightPlayer: rightPlayer
@@ -177,6 +215,8 @@ export class Board extends Component {
 
     render() {
         const { topPlayer, bottomPlayer, leftPlayer, rightPlayer } = this.props.cardgame;
+        let tempPile = this.state.tempPile;
+        //if (this.props.cardgame.bottomPlayer) alert(this.props.cardgame.bottomPlayer.hand_pile.length);
         return (
             <Aux>
                 {bottomPlayer && (<div>
@@ -193,7 +233,138 @@ export class Board extends Component {
                             {leftPlayer && (<GamePlayer player={leftPlayer} />)}
                         </div>
                         <div className="col-6 text-center">
-                            <div className="game-board"></div>
+                            <div className="game-board">
+
+                                <div className="row">
+                                    <div className="col-4 ">
+                                        <div className="board-container left">
+                                            {
+                                                leftPlayer && (
+                                                    <div className="">
+                                                        <div className={`temp-pile `}>
+                                                            {
+                                                                leftPlayer.active_pile.map((card, index) => {
+                                                                    return (
+                                                                        <PlayerCard
+                                                                            key={card.cardid}
+                                                                            card={card}
+                                                                            activecard={true}
+                                                                            deckclass={card.deckclass}
+                                                                            clicked={false}
+                                                                            handleCardClick={null} />
+                                                                    )
+                                                                })
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                )
+                                            }
+                                        </div>
+                                    </div>
+                                    <div className="col-4  ">
+                                        <div className="col-4 ">
+                                            <div className="board-container top">
+                                                {
+                                                    topPlayer && (
+                                                        <div className="">
+                                                            <div className={`temp-pile `}>
+                                                                {
+                                                                    topPlayer.active_pile.map((card, index) => {
+                                                                        return (
+                                                                            <PlayerCard
+                                                                                key={card.cardid}
+                                                                                card={card}
+                                                                                activecard={true}
+                                                                                deckclass={card.deckclass}
+                                                                                clicked={false}
+                                                                                handleCardClick={null} />
+                                                                        )
+                                                                    })
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                }
+
+                                            </div>
+                                        </div>
+                                        <div className="board-container center">
+                                            {
+                                                tempPile && (
+                                                    <div className="">
+                                                        <div className={`temp-pile `}>
+                                                            {
+                                                                tempPile.map((card, index) => {
+                                                                    return (
+                                                                        <PlayerCard
+                                                                            key={card.cardid}
+                                                                            card={card}
+                                                                            deckclass={card.deckclass}
+                                                                            clicked={false}
+                                                                            handleCardClick={null} />
+                                                                    )
+                                                                })
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                )
+                                            }
+                                        </div>
+                                        <div className="col-4 ">
+                                            <div className="board-container bottom">
+                                                {
+                                                    bottomPlayer && (
+                                                        <div className="">
+                                                            <div className={`temp-pile `}>
+                                                                {
+                                                                    bottomPlayer.active_pile.map((card, index) => {
+                                                                        return (
+                                                                            <PlayerCard
+                                                                                key={card.cardid}
+                                                                                card={card}
+                                                                                activecard={true}
+                                                                                deckclass={card.deckclass}
+                                                                                clicked={false}
+                                                                                handleCardClick={null} />
+                                                                        )
+                                                                    })
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="col-4 ">
+                                        <div className="board-container right">
+                                            {
+                                                rightPlayer && (
+                                                    <div className="">
+                                                        <div className={`temp-pile `}>
+                                                            {
+                                                                rightPlayer.active_pile.map((card, index) => {
+                                                                    return (
+                                                                        <PlayerCard
+                                                                            key={card.cardid}
+                                                                            card={card}
+                                                                            activecard={true}
+                                                                            deckclass={card.deckclass}
+                                                                            clicked={false}
+                                                                            handleCardClick={null} />
+                                                                    )
+                                                                })
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                )
+                                            }
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
                         </div>
                         <div className="col-3 text-left">
                             {rightPlayer && (<GamePlayer player={rightPlayer} />)}

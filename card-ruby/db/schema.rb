@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_02_29_030302) do
+ActiveRecord::Schema.define(version: 2020_03_01_103816) do
 
   create_table "card_effects", force: :cascade do |t|
     t.string "name"
@@ -69,6 +69,7 @@ ActiveRecord::Schema.define(version: 2020_02_29_030302) do
     t.boolean "hasturn"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.integer "playcount"
   end
 
   create_table "pile_types", force: :cascade do |t|

@@ -8,7 +8,9 @@ import {
     ROUTE_API_CLOSEGAME,
     ROUTE_API_STARTGAME,
     ROUTE_API_GETGAMEDATA,
-    ROUTE_API_GETPLAYERCARD
+    ROUTE_API_GETPLAYERCARD,
+    ROUTE_API_THROW_CARD,
+    ROUTE_API_APPLY_CARD_EFFECT
 } from '../constants/apiroutes'
 
 export default {
@@ -22,6 +24,11 @@ export default {
         START_GAME: GenerateDeckURI(ROUTE_API_STARTGAME),
         GET_GAME: GenerateDeckURI(ROUTE_API_GETGAMEDATA),
         GET_PLAYER_CARD: GenerateDeckURI(ROUTE_API_GETPLAYERCARD)
+    },
+
+    CARDAPI: {
+        THROW_CARD: GenerateCardURI(ROUTE_API_THROW_CARD),
+        APPLY_CARD_EFFECT: GenerateCardURI(ROUTE_API_APPLY_CARD_EFFECT),
     }
 }
 
@@ -30,5 +37,5 @@ function GenerateDeckURI(uri) {
 }
 
 function GenerateCardURI(uri) {
-    return ROUTE_API_URL + 'v1/deck/' + uri;
+    return ROUTE_API_URL + 'v1/card/' + uri;
 }

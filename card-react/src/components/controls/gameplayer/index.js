@@ -9,16 +9,33 @@ import 'react-confirm-alert/src/react-confirm-alert.css';
 export class GamePlayer extends Component {
     constructor(props) {
         super(props);
+
         const { player, mycard, handleCardClickMaster } = this.props;
-        this.player = player;
-        this.mycard = mycard;
+
         this.state = {
-            clicked: false
+            player, clicked: false
         }
-        
+        //this.player = player;
+        this.mycard = mycard;
+
+
         this.handleCardClickMaster = handleCardClickMaster;
 
     }
+
+    componentDidUpdate() {
+
+        this.player = this.props.player;
+    }
+
+    componentWillReceiveProps(newProps) {
+
+        this.setState({ player: newProps.player })
+        // this.setState({
+        //     location: newProps.location
+        // })
+    }
+
 
 
     handleCardClick = (cardid, clicked) => {
@@ -33,7 +50,7 @@ export class GamePlayer extends Component {
                     {
                         label: "Yes",
                         onClick: () => {
-                            this.handleCardClickMaster( cardid); 
+                            this.handleCardClickMaster(cardid, this.player.playerid);
                             this.setState({ clicked: false })
                         }
                     },
@@ -49,14 +66,16 @@ export class GamePlayer extends Component {
 
     render() {
 
+        let player = this.state.player;
         let userData = GetUserData();
         let handClass = '';
-        if (userData.userid === this.player.userid)
+        if (userData.userid === player.userid)
             handClass = 'mine';
+
         return (
 
 
-            <div className={`player-container ${this.player.positionClass}`}>
+            <div className={`player-container ${player.positionClass}`}>
                 <div className="row">
                     {/* {
                         handClass.length > 0 && (
@@ -68,22 +87,22 @@ export class GamePlayer extends Component {
                     } */}
                     {
                         handClass.length > 0 && (
-                            <div className={`discard-pile pile  ${this.player.deckclass}`}>
-                                <span className={`card-count ${this.player.deckclass}`}>{this.player.discard_pile_count}</span>
+                            <div className={`discard-pile pile  ${player.deckclass}`}>
+                                <span className={`card-count ${player.deckclass}`}>{player.discard_pile_count}</span>
                                 <span className="title">discard </span>
                             </div>
                         )
                     }
 
-                    <div className={`player-data ${this.player.deckclass} ${this.player.hasturn ? 'playing' : ''}`}>
-                        <span className={`card-count ${this.player.deckclass}`}>{this.player.health}</span>
+                    <div className={`player-data ${player.deckclass} ${player.hasturn ? 'playing' : ''}`}>
+                        <span className={`card-count ${player.deckclass}`}>{player.health}</span>
 
                         <div className="player-container">
-                            <span className="name-title">{this.player.name}</span>
+                            <span className="name-title">{player.name}</span>
 
                             {
 
-                                this.player.hasturn === 1 && (
+                                player.hasturn === 1 && (
                                     <span className="playing-title">Playing...</span>
                                 )}
                         </div>
@@ -92,8 +111,8 @@ export class GamePlayer extends Component {
                     {
                         handClass.length > 0 && (
 
-                            <div className={`deck-pile pile ${this.player.deckclass}`}>
-                                <span className={`card-count ${this.player.deckclass}`}>{this.player.deck_pile_count}</span>
+                            <div className={`deck-pile pile ${player.deckclass}`}>
+                                <span className={`card-count ${player.deckclass}`}>{player.deck_pile_count}</span>
                                 <span className="title">Deck </span>
                             </div>
                         )
@@ -104,16 +123,19 @@ export class GamePlayer extends Component {
 
                 {handClass.length > 0 && (
                     <div className="row">
-                        <div className={`hand-pile hand  ${this.player.deckclass} ${handClass}`}>
-                            {this.player.hand_pile &&
-                                this.player.hand_pile.map((card, index) => {
+                        <div className={`hand-pile hand  ${player.deckclass} ${handClass}`}>
+                            {
+                            
+                            player.hand_pile &&
+                            
+                                player.hand_pile.map((card, index) => {
                                     return (
                                         <PlayerCard
                                             key={card.cardid}
                                             card={card}
-                                            deckclass={this.player.deckclass}
+                                            deckclass={player.deckclass}
                                             clicked={this.state.cardid && this.state.cardid === card.cardid && this.state.clicked}
-                                            handleCardClick={this.handleCardClick} />
+                                            handleCardClick={player.playcount > 0 ? this.handleCardClick : null} />
                                     )
                                 })
                             }

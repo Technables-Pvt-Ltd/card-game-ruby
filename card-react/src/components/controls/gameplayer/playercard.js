@@ -5,16 +5,24 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const PlayerCard = props => {
 
-    const { card, deckclass, clicked, handleCardClick } = props;
-
+    const { card, deckclass, clicked, handleCardClick, activecard } = props;
 
     return (
         <div className={`deck-card ${deckclass} ${clicked ? 'clicked' : ''}`} key={card.cardid} onClick={handleCardClick && handleCardClick.bind(this, card.cardid, clicked)}>
             <div className='effect' key={card.cardid}>
                 {
+
+
+
                     card.effects.map((effect, index) => {
 
-                        let effectHtml = Array.from({ length: effect.count }, (item, index) => {
+                        let effectHtml = ''
+
+                        let count = effect.count;
+                        if (activecard && effect.effectclass === 'eff-defense')
+                            count = card.card_health
+
+                        effectHtml = Array.from({ length: effect.count }, (item, index) => {
                             switch (effect.effectclass) {
                                 case 'eff-heal':
                                     return <FontAwesomeIcon key={index} className="eff-icon" icon={faHeartbeat} />
