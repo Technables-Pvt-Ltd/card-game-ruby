@@ -43,9 +43,6 @@ export class Board extends Component {
   };
 
   handleCardClick = async (cardid, playerid) => {
-    const userData = GetUserData();
-    let userid = userData.userid;
-
     let paramObj = {
       cardid: cardid,
       playerid: playerid
@@ -106,7 +103,7 @@ export class Board extends Component {
             targetid: targetid
           };
 
-          this.applycardeffect(requestObj);
+          this.applycardeffect(requestObj, cardid);
         }
       } else {
         let requestObj = {
@@ -114,13 +111,13 @@ export class Board extends Component {
           playerid: playerid,
           targetid: null
         };
-    this.applycardeffect(requestObj);
+        this.applycardeffect(requestObj, cardid);
       }
     }
-  }
+  };
 
-  applycardeffect = (paramobj) => {
-    let applyResult = await gameactionlist.applycardeffect(requestObj);
+  applycardeffect = async (paramobj,cardid) => {
+    let applyResult = await gameactionlist.applycardeffect(paramobj);
     let applyResponse = applyResult.data.result;
     if (applyResponse.updated === true) {
       this.pubnub.publish(
@@ -141,7 +138,7 @@ export class Board extends Component {
         text: applyResponse.error
       });
     }
-  }
+  };
 
   subscribeChannel = channel => {
     this.pubnub.subscribe({
