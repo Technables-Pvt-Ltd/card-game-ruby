@@ -21,3 +21,7 @@
 li.list-group-item-flush {
     border: 0px;
 }
+
+.list-group-item {
+    padding: 0.45rem 1.25rem !important;
+}

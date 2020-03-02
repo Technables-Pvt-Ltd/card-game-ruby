@@ -168,7 +168,7 @@
 }
 
 .board-container {
-    width: 150px ;
+    width: 150px;
     height: 60px;
     border: 1px solid #dad7d7;
     align-items: center;
@@ -176,18 +176,24 @@
     margin: 2px;
 }
 
-.board-container.left{
-    height: 150px ;
-    width: 50px;
-}
-.board-container.right{
-    height: 150px ;
-    width: 50px;
-    text-align: right;
+.board-container.left {
+    height: 150px;
+    width: 60px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
 }
 
-.board-container.center{
-    background:rgba(0,0,0,0.15);
+.board-container.right {
+    height: 150px;
+    width: 60px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.board-container.center {
+    background: rgba(0, 0, 0, 0.15);
 }
 
 .temp-pile .deck-card {
@@ -214,4 +220,14 @@
     color: #fff;
     text-align: center;
     width: 100%;
+}
+
+.board-container.right .deck-card {
+    transform: rotate(270deg);
+
+}
+
+.board-container.left .deck-card {
+    transform: rotate(90deg);
+
 }

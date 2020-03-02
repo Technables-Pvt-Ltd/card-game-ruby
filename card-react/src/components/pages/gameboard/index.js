@@ -235,36 +235,36 @@ export class Board extends Component {
                         <div className="col-6 text-center">
                             <div className="game-board">
 
-                                <div className="row">
+                                <div className="row align-items-center">
                                     <div className="col-4 ">
                                         <div className="board-container left">
-                                            {
-                                                leftPlayer && (
-                                                    <div className="">
-                                                        <div className={`temp-pile `}>
-                                                            {
-                                                                leftPlayer.active_pile.map((card, index) => {
-                                                                    return (
-                                                                        <PlayerCard
-                                                                            key={card.cardid}
-                                                                            card={card}
-                                                                            activecard={true}
-                                                                            deckclass={card.deckclass}
-                                                                            clicked={false}
-                                                                            handleCardClick={null} />
-                                                                    )
-                                                                })
-                                                            }
+                                        {
+                                                    leftPlayer && (
+                                                        <div className="">
+                                                            <div className={`temp-pile `}>
+                                                                {
+                                                                    leftPlayer.active_pile.map((card, index) => {
+                                                                        return (
+                                                                            <PlayerCard
+                                                                                key={card.cardid}
+                                                                                card={card}
+                                                                                activecard={true}
+                                                                                deckclass={card.deckclass}
+                                                                                clicked={false}
+                                                                                handleCardClick={null} />
+                                                                        )
+                                                                    })
+                                                                }
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )
-                                            }
+                                                    )
+                                                }
                                         </div>
                                     </div>
-                                    <div className="col-4  ">
-                                        <div className="col-4 ">
+                                    <div className="col-4 d-flex flex-column align-items-center ">
+                                        <div className="">
                                             <div className="board-container top">
-                                                {
+                                            {
                                                     topPlayer && (
                                                         <div className="">
                                                             <div className={`temp-pile `}>
@@ -310,7 +310,7 @@ export class Board extends Component {
                                                 )
                                             }
                                         </div>
-                                        <div className="col-4 ">
+                                        <div className=" ">
                                             <div className="board-container bottom">
                                                 {
                                                     bottomPlayer && (
@@ -336,29 +336,29 @@ export class Board extends Component {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="col-4 ">
+                                    <div className="col-4 d-flex justify-content-end">
                                         <div className="board-container right">
-                                            {
-                                                rightPlayer && (
-                                                    <div className="">
-                                                        <div className={`temp-pile `}>
-                                                            {
-                                                                rightPlayer.active_pile.map((card, index) => {
-                                                                    return (
-                                                                        <PlayerCard
-                                                                            key={card.cardid}
-                                                                            card={card}
-                                                                            activecard={true}
-                                                                            deckclass={card.deckclass}
-                                                                            clicked={false}
-                                                                            handleCardClick={null} />
-                                                                    )
-                                                                })
-                                                            }
+                                        {
+                                                    rightPlayer && (
+                                                        <div className="">
+                                                            <div className={`temp-pile `}>
+                                                                {
+                                                                    rightPlayer.active_pile.map((card, index) => {
+                                                                        return (
+                                                                            <PlayerCard
+                                                                                key={card.cardid}
+                                                                                card={card}
+                                                                                activecard={true}
+                                                                                deckclass={card.deckclass}
+                                                                                clicked={false}
+                                                                                handleCardClick={null} />
+                                                                        )
+                                                                    })
+                                                                }
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )
-                                            }
+                                                    )
+                                                }
 
                                         </div>
                                     </div>
