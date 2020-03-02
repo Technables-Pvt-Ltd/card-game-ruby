@@ -16,6 +16,8 @@ class V1::ApicardController < ApplicationController
     else
       proceed = true
       error = ""
+      can_attack = false
+      opponent_data = []
 
       statement = "select 1 where exists(select 1 from player_cards where cardid = #{cardid} 
       and playerid = #{playerid} and pile_type = 2)"
@@ -31,6 +33,15 @@ class V1::ApicardController < ApplicationController
         update_card.pile_type = 5
         update_card.save!
 
+        attack_statement = "select 1 where exists (select 1 from card_effects_maps where effectid = 3 and cardid = #{cardid}" 
+
+        attact_cards = CardEffectsMap.find_by_sql(attack_statement)
+        can_attack = attact_cards.any?
+
+        if can_attack
+          opponent_data = get_opponent_data?(playerid)
+        end
+
         update_player = GamePlayer.lock("FOR UPDATE NOWAIT").find_by(id: playerid)
 
         update_player.playcount = player.playcount - 1
@@ -42,15 +53,43 @@ class V1::ApicardController < ApplicationController
     end
     if proceed
       data = {
-        :proceed => proceed, :error => error, :updated => true,
+        :proceed => proceed, :error => error, :updated => true, :can_attack=>can_attack, :opponent_data=>opponent_data,
       }
       return data
     else
       data = {
-        :proceed => proceed, :error => error, :update => false,
+        :proceed => proceed, :error => error, :update => false, :can_attack=>false,
       }
       return data
     end
+  end
+
+  def get_opponent_data?(playerid)
+    game = GamePlayer.where(:id=>playerid).first()
+    
+    statement = "select gp.id, dd.name, gp.health, dd.deckclass from game_players gp inner join deck_data dd on gp.deckid = dd.id
+    and gp.gameid = #{game.gameid} and gp.id <> #{playerid} and gp.status = 1"
+
+    game_players = GamePlayer.connection.select_all(statement)
+
+    opponent_data = []
+
+    game_players.each do |player|
+      game_player = OpenStruct.new(player)
+
+      card_health = 0
+      card_health = PlayerCard.sum(:card_health).where(:id=>game_player.id, :pile_type=>3)
+
+      opponent_data << {
+        playerid: game_player.id,
+        name: game_player.name,
+        health: game_player.health,
+        deckclass: game_player.deckclass,
+        card_health: card_health
+      }
+
+    end
+    return opponent_data
   end
 
   def apply_card_effect?(cardid, playerid, targetid)
@@ -58,7 +97,6 @@ class V1::ApicardController < ApplicationController
     error = ""
     players = GamePlayer.where("id  = ? and status = 1 and hasturn = 1", playerid)
     #game = games.first()
-    data = []
     if (players.length == 0)
       proceed = false
       error = "invalid player request"
@@ -72,20 +110,13 @@ class V1::ApicardController < ApplicationController
       cards = PlayerCard.connection.select_all(statement)
       exists = cards.any?
 
-      #cardffects = CardEffectsMap.where(:cardid => cardid)
-
       cardffects = CardEffectsMap.where(:cardid => cardid)
-      # select effectid, count from card_effects_maps
-      # where cardid = #{cardid}")
-
+     
       if (cardffects.any? == true)
         proceed = true
         error = ""
-        #data = cardffects.length
         movecard = true
         cardffects.each do |cardeffect|
-          #cardeffect = OpenStruct.new(effect)
-          data << { effect: cardeffect }
           case cardeffect.effectid
           when 1
             apply_playagain?(playerid, cardeffect.count)
@@ -112,6 +143,7 @@ class V1::ApicardController < ApplicationController
           deck_card = PlayerCard.where(:playerid => playerid, :cardid => cardid).first()
           move_card_to_discard?(deck_card.id)
         end
+        data = 
       else
         proceed = false
         error = "invalid card request "
@@ -125,12 +157,12 @@ class V1::ApicardController < ApplicationController
       end
 
       data = {
-        :proceed => proceed, :error => error, :data => data,
+        :proceed => proceed, :error => error, :udpated => true,
       }
       return data
     else
       data = {
-        :proceed => proceed, :error => error, :data => [],
+        :proceed => proceed, :error => error, :udpated => false,
       }
       return data
     end

@@ -15,31 +15,21 @@ export class GamePlayer extends Component {
         this.state = {
             player, clicked: false
         }
-        //this.player = player;
         this.mycard = mycard;
-
-
         this.handleCardClickMaster = handleCardClickMaster;
-
     }
 
     componentDidUpdate() {
-
         this.player = this.props.player;
     }
 
     componentWillReceiveProps(newProps) {
-
         this.setState({ player: newProps.player })
-        // this.setState({
-        //     location: newProps.location
-        // })
     }
 
 
 
     handleCardClick = (cardid, clicked) => {
-        //alert(cardid);
         clicked = !clicked;
         this.setState({ clicked: clicked, cardid: cardid });
         if (clicked) {
