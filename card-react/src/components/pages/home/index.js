@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import Aux from '../../../hoc/_Aux';
 import './index.css'
 import GameInit from '../../controls/gameinit'
+import GameSymbols from '../../controls/gamesymbols'
 
 export class Home extends Component {
     constructor(props){
@@ -65,8 +66,9 @@ export class Home extends Component {
 
                                 </ul>
                             </div>
-                            <div className="col-4">
+                            <div className="col-4 d-flex flex-column">
                                 <GameInit history={this.props.history}/>
+                                <GameSymbols/>
                             </div>
                         </div>
                     </div>
