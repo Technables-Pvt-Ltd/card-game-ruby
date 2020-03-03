@@ -201,7 +201,7 @@ class V1::ApideckController < ApplicationController
         total_players = game_decks.length
 
         player_position_master = [0, 1, 2, 3]
-        player_turn_master = [true, false, false, false]
+        player_turn_master = [false, false, false, false]
 
         player_position = player_position_master[0...total_players].shuffle
         player_turn = player_turn_master[0...total_players].shuffle
@@ -211,11 +211,17 @@ class V1::ApideckController < ApplicationController
           p_userid = deck.userid
           deckid = deck.deckid
           position = player_position[index]
-          health = 10
+          health = PLAYER_HEALTH
           status = 1
           hasturn = player_turn[index]
+          playcount = 0
+          withdraw_count = 5
+          # if (hasturn == true)
+          #   playcount = 1
+          #   withdraw_count = 6
+          # end
 
-          game_player = GamePlayer.create(gameid: gameid, deckid: deckid, userid: p_userid, position: position, health: health, status: status, hasturn: hasturn)
+          game_player = GamePlayer.create(gameid: gameid, deckid: deckid, userid: p_userid, position: position, health: health, status: status, hasturn: hasturn, playcount: playcount)
 
           ### insert into player_card ###
 
@@ -227,7 +233,7 @@ class V1::ApideckController < ApplicationController
             cardid = deck_card.id
             o_deckid = deckid
             cur_deckid = deckid
-            pile_type = index < 5 ? 2 : 1 ## 1-> deck, 2->hand, 3->active, 4->discard, 5-> temp
+            pile_type = index < withdraw_count ? 2 : 1 ## 1-> deck, 2->hand, 3->active, 4->discard, 5-> temp
             card_health = 0
 
             PlayerCard.create(playerid: playerid, cardid: cardid, o_deckid: o_deckid, cur_deckid: cur_deckid, pile_type: pile_type, card_health: card_health)
@@ -237,6 +243,8 @@ class V1::ApideckController < ApplicationController
         proceed = fase
         error = "game start request initiated by non-admin user"
       end
+
+      select_random_player?(game.id)
     end
     if proceed
       data = {
@@ -249,6 +257,17 @@ class V1::ApideckController < ApplicationController
       }
     end
     return data
+  end
+
+  def select_random_player?(gameid)
+    random_player = GamePlayer.where(:gameid => gameid).order("RANDOM()").first()
+    random_player.hasturn = 1
+    random_player.playcount = 1
+    random_player.save!
+
+    top_draw_card = PlayerCard.where(:playerid => random_player.id, :pile_type => 1).first()
+    top_draw_card.pile_type = 2
+    top_draw_card.save!
   end
 
   def getGameDeck?(gameid)
@@ -273,7 +292,7 @@ class V1::ApideckController < ApplicationController
     return decks
   end
 
-  def get_GameData?(gamecode)
+  def get_GameData?(gamecode, firstload, count)
     proceed = false
     error = ""
     games = CardGame.find_by_sql("select id, code, status from card_games where code = '#{gamecode}' and status = 2")
@@ -281,73 +300,105 @@ class V1::ApideckController < ApplicationController
     temp_pile = []
     if (games.length == 0)
       proceed = false
-      error = "game with the provided code does not exists"
+      error = "game with the provided code does not exists " + gamecode
     else
       game = games.first()
       proceed = true
       error = ""
-
+      hastempFile = false
       players = []
-      gameplayers = GamePlayer.connection.select_all("select gp.userid,gp.id as id,dt.name, dt.deckclass, 
+      complete = false
+      active_players_count = GamePlayer.where(:gameid => game.id, :status => 1).count(:id)
+
+      if active_players_count > 1
+        gameplayers = GamePlayer.connection.select_all("select gp.userid,gp.id as id,dt.name, dt.deckclass, 
         gp.position, gp.hasturn, gp.health, gp.status, gp.playcount
         from game_players gp
         inner join deck_data dt on gp.deckid = dt.id
         where gp.gameid = #{game.id} order by gp.position")
 
-      gameplayers.each do |playerObj|
-        player = OpenStruct.new(playerObj)
+        gameplayers.each do |playerObj|
+          player = OpenStruct.new(playerObj)
 
-        deck_pile_count = 0
-        discard_pile_count = 0
+          deck_pile_count = 0
+          discard_pile_count = 0
 
-        deck_pile_count = PlayerCard.where(:playerid => player.id, :pile_type => 1).count
-        discard_pile_count = PlayerCard.where(:playerid => player.id, :pile_type => 4).count
+          deck_pile_count = PlayerCard.where(:playerid => player.id, :pile_type => 1).count
+          discard_pile_count = PlayerCard.where(:playerid => player.id, :pile_type => 4).count
 
-        deck_pile = PlayerCard.connection.select_all("select cardid, dc.name, pc.card_health,
+          deck_pile = PlayerCard.connection.select_all("select pc.id,cardid, dc.name, pc.card_health,
           pc.o_deckid, pc.cur_deckid, pc.pile_type from player_cards pc
           inner join deck_cards dc on pc.cardid = dc.id
-          where playerid = #{player.id}")
+          where playerid = #{player.id} order by pc.updated_at")
 
-        #temp_pile = []
-        hand_pile_cards = []
-        active_pile_cards = []
-        deck_pile.each do |cardObj|
-          card = OpenStruct.new(cardObj)
-          card_effects = CardEffectsMap.connection.select_all("select cem.id, ce.name, ce.effectclass,
+          #temp_pile = []
+          hand_pile_cards = []
+          active_pile_cards = []
+          deck_pile.each do |cardObj|
+            card = OpenStruct.new(cardObj)
+            card_effects = CardEffectsMap.connection.select_all("select cem.id, ce.name, ce.effectclass,
             cem.count from card_effects_maps cem
             inner join card_effects ce on cem.effectid = ce.id
             where cem.cardid = #{card.cardid}")
 
-          if card.pile_type == 2
-            hand_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects }
-          elsif card.pile_type == 3
-            active_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects , deckclass: player.deckclass}
-          elsif card.pile_type == 5
-            temp_pile << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects, deckclass: player.deckclass }
+            if card.pile_type == 2
+              hand_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects }
+            elsif card.pile_type == 3
+              active_pile_cards << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects, deckclass: player.deckclass }
+            elsif card.pile_type == 5
+              if (firstload.to_s == "true")
+                hastempFile = true
+                move_card_to_deck?(card.id)
+              else
+                temp_pile << { cardid: card.cardid, name: card.name, card_health: card.card_health, o_deckid: card.o_deckid, cur_deckid: card.cur_deckid, effects: card_effects, deckclass: player.deckclass }
+              end
+            end
           end
-        end
+          if (hastempFile.to_s == "true" && firstload.to_s == "true")
+            update_player_playcount?(player.id)
+          end
 
-        players << {
-          userid: player.userid,
-          playerid: player.id,
-          name: player.name,
-          deckclass: player.deckclass,
-          position: player.position,
-          hasturn: player.hasturn,
-          health: player.health,
-          status: player.status,
-          playcount: player.playcount,
-          deck_pile_count: deck_pile_count,
-          hand_pile: hand_pile_cards,
-          active_pile: active_pile_cards,
-          discard_pile_count: discard_pile_count,
+          if (hand_pile_cards.length == 0 && player.status == 1)
+            hand_pile_cards = draw_card_from_pile?(player.id, 2)
+            #get_GameData?(gamecode, firstload)
+
+          end
+
+          players << {
+            userid: player.userid,
+            playerid: player.id,
+            name: player.name,
+            deckclass: player.deckclass,
+            position: player.position,
+            hasturn: player.hasturn,
+            health: player.health,
+            status: player.status,
+            playcount: player.playcount,
+            deck_pile_count: deck_pile_count,
+            hand_pile: hand_pile_cards,
+            active_pile: active_pile_cards,
+            discard_pile_count: discard_pile_count,
+          #hastempFile: hastempFile,
           #temp_pile: temp_pile,
-        }
+          }
+        end
+      else
+        complete = true
+        winner_data = GamePlayer.connection.select_all("select gp.userid,gp.id as id,dt.name, dt.deckclass
+          from game_players gp
+          inner join deck_data dt on gp.deckid = dt.id
+          where gp.gameid = #{game.id} and gp.status = 1 order by gp.position")
+        winner = nil?
+        winner_data.each do |winner_hash|
+          winner_obj = OpenStruct.new(winner_hash)
+          winner = { name: winner_obj.name, deckclass: winner_obj.deckclass }
+        end
+        data = { winner: winner }
       end
     end
     if proceed
       result = {
-        :proceed => proceed, :error => error, players: players, temp_pile: temp_pile,
+        :proceed => proceed, :error => error, players: players, complete: complete, temp_pile: temp_pile, data: data,
       }
       #return data
     else
@@ -356,6 +407,89 @@ class V1::ApideckController < ApplicationController
       }
     end
     return result
+  end
+
+  def draw_card_from_pile?(playerid, count)
+    deck_cards = PlayerCard.where(:pile_type => 1, :playerid => playerid).limit(count) # limit #{count}")
+    if deck_cards.any?
+      deck_count = deck_cards.length
+      if dec_count = count
+        deck_cards.each do |deck_card|
+          #card = OpenStruct.new(deck_card)
+          deck_card.pile_type = 2
+          deck_card.save!
+        end
+      else
+        deck_cards.each do |deck_card|
+          #deck_card = OpenStruct.new(deck_card)
+          deck_card.pile_type = 2
+          deck_card.save!
+        end
+
+        #shuffle discard and select (count-deck_count) cards
+        remaining_card_count = count - deck_count
+
+        shuffle_cards = PlayerCard.find_by_sql("
+          select id, playerid, cardid, o_deckid, cur_deckid from player_cards 
+          where playerid = #{playerid} and pile_type = 4
+          ")
+
+        # PlayerCard.find_by_sql("delete from player_cards
+        #     where playerid = #{playerid} and pile_type = 4")
+
+        shuffle_cards.shuffle.each_with_index do |card, index|
+          deck_card = OpenStruct.new(card)
+
+          playerid = playerid
+          cardid = deck_card.cardid
+          o_deckid = deck_card.o_deckid
+          cur_deckid = deck_card.cur_deckid
+          pile_type = index < remaining_card_count ? 2 : 1 ## 1-> deck, 2->hand, 3->active, 4->discard, 5-> temp
+          card_health = 0
+
+          PlayerCard.create(playerid: playerid, cardid: cardid, o_deckid: o_deckid, cur_deckid: cur_deckid, pile_type: pile_type, card_health: card_health)
+          PlayerCard.delete(:id => deck_card.id)
+        end
+      end
+    else
+      #shuffle discard and select count cards
+      shuffle_cards = PlayerCard.find_by_sql("
+        select id, playerid, cardid, o_deckid, cur_deckid from player_cards 
+        where playerid = #{playerid} and pile_type = 4
+        ")
+
+      shuffle_cards.shuffle.each_with_index do |deck_card, index|
+        playerid = playerid
+        cardid = deck_card.cardid
+        o_deckid = deck_card.o_deckid
+        cur_deckid = deck_card.cur_deckid
+        pile_type = index < count ? 2 : 1 ## 1-> deck, 2->hand, 3->active, 4->discard, 5-> temp
+        card_health = 0
+
+        PlayerCard.create(playerid: playerid, cardid: cardid, o_deckid: o_deckid, cur_deckid: cur_deckid, pile_type: pile_type, card_health: card_health)
+        PlayerCard.delete(:id => deck_card.id)
+      end
+    end
+
+    deck_cards = PlayerCard.where(:pile_type => 1, :playerid => playerid).limit(count) # limit #{count}")
+  end
+
+  def update_player_playcount?(playerid)
+    current_player = GamePlayer.where(:hasturn => 1).first()
+    GamePlayer.update_all(:hasturn => 0)
+
+    current_player.hasturn = 1
+    current_player.playcount = current_player.playcount + 1
+    current_player.save!
+  end
+
+  def move_card_to_deck?(id)
+    discard_cards = PlayerCard.where(:id => id)
+
+    discard_card = discard_cards.first()
+    discard_card.card_health = 0
+    discard_card.pile_type = 2
+    discard_card.save!
   end
 
   def get_playercard?(playerid)
@@ -587,18 +721,23 @@ class V1::ApideckController < ApplicationController
 
   def getGameData
     gamecode = params[:gamecode]
+    firstload = params[:firstload]
+
+    if (!params[:firstload].present?)
+      firstload = false
+    end
 
     status = STATUS_OK
     proceed = true
     err_msg = ""
-    if (!params[:gamecode].present?) || gamecode.nil?
+    if (!params[:gamecode].present? || !params[:firstload]) || gamecode.nil?
       proceed = false
       err_msg = MSG_PARAM_MISSING
       status = STATUS_NOT_FOUND
     end
 
     if proceed
-      data = get_GameData?(gamecode)
+      data = get_GameData?(gamecode, firstload, 0)
       message = MSG_GAME_PLAYGING
       success = true
       data = {

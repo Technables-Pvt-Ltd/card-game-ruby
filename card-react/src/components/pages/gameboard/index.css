@@ -121,9 +121,10 @@
     vertical-align: middle;
     display: inherit;
     padding: 15px;
-    height: 60px;
+    height: 80px;
     border-radius: 15px;
     position: relative;
+    min-width: 160px;
 
 }
 
@@ -177,16 +178,16 @@
 }
 
 .board-container.left {
-    height: 150px;
-    width: 60px;
+    height: 180px;
+    width: 75px;
     display: flex;
     align-items: flex-start;
     justify-content: center;
 }
 
 .board-container.right {
-    height: 150px;
-    width: 60px;
+    height: 180px;
+    width: 75px;
     display: flex;
     align-items: flex-end;
     justify-content: center;
@@ -231,3 +232,42 @@
     transform: rotate(90deg);
 
 }
+
+.board-container.right .temp-pile,
+.board-container.left .temp-pile {
+    flex-direction: column;
+    height: 100%;
+}
+
+.left .temp-pile .deck-card,
+.right .temp-pile .deck-card {
+    height: 65px;
+    width: 42px;
+    /* margin: 0px !important; */
+    margin:  -9px 0 -9px 0 !important;
+}
+
+.winner-card {
+    height: 180px;
+    width: 150px;
+    display: flex;
+    align-items: flex-end;
+    border-radius: 10px;
+    margin: 10px auto 10px;
+    padding: 10px;
+    justify-content: center;
+    
+}
+
+.winner-card span {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    text-align: center
+}
+
+.span-card-wrapper .health-title {
+    font-size: 10px;
+    color: #fff;
+}
+

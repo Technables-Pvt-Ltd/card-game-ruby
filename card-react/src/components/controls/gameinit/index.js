@@ -103,8 +103,8 @@ export class GameInit extends Component {
     if (msg.type) {
       switch (msg.type) {
         case PUBNUB_JOIN:
-          
-          this.subscribeChannel(this.gameChannel);
+
+          //this.subscribeChannel(this.gameChannel);
           break;
         case PUBNUB_DECKSELECT:
           this.displayRoomStatusModal(this.roomId, msg.isRoomCreator);
@@ -112,7 +112,7 @@ export class GameInit extends Component {
             data: "New Player Joined",
             type: TOAST_SUCCESS
           });
-          this.publishMessage(this.lobbyChannel, message);
+          // this.publishMessage(this.lobbyChannel, message);
           break;
 
         case PUBNUB_DECKLEAVE:
@@ -264,7 +264,7 @@ export class GameInit extends Component {
       footer:
         this.state.isRoomCreator === true
           ? ""
-          : "<span>Awaiting room creator confirmation</span>"
+          : "<span class='alert alert-info'>Awaiting room creator confirmation</span>"
     }).then(result => {
       if (result.value) {
         //deckID = result.value;

@@ -33,7 +33,7 @@ class V1::ApicardController < ApplicationController
         update_card.pile_type = 5
         update_card.save!
 
-        attack_statement = "select 1 where exists (select 1 from card_effects_maps where effectid = 3 and cardid = #{cardid}" 
+        attack_statement = "select 1 where exists (select 1 from card_effects_maps where effectid = 3 and cardid = #{cardid})"
 
         attact_cards = CardEffectsMap.find_by_sql(attack_statement)
         can_attack = attact_cards.any?
@@ -53,20 +53,20 @@ class V1::ApicardController < ApplicationController
     end
     if proceed
       data = {
-        :proceed => proceed, :error => error, :updated => true, :can_attack=>can_attack, :opponent_data=>opponent_data,
+        :proceed => proceed, :error => error, :updated => true, :can_attack => can_attack, :opponent_data => opponent_data,
       }
       return data
     else
       data = {
-        :proceed => proceed, :error => error, :update => false, :can_attack=>false,
+        :proceed => proceed, :error => error, :update => false, :can_attack => false,
       }
       return data
     end
   end
 
   def get_opponent_data?(playerid)
-    game = GamePlayer.where(:id=>playerid).first()
-    
+    game = GamePlayer.where(:id => playerid).first()
+
     statement = "select gp.id, dd.name, gp.health, dd.deckclass from game_players gp inner join deck_data dd on gp.deckid = dd.id
     and gp.gameid = #{game.gameid} and gp.id <> #{playerid} and gp.status = 1"
 
@@ -78,16 +78,15 @@ class V1::ApicardController < ApplicationController
       game_player = OpenStruct.new(player)
 
       card_health = 0
-      card_health = PlayerCard.sum(:card_health).where(:id=>game_player.id, :pile_type=>3)
+      card_health = PlayerCard.where(:playerid => game_player.id, :pile_type => 3).sum("card_health")
 
       opponent_data << {
         playerid: game_player.id,
         name: game_player.name,
         health: game_player.health,
         deckclass: game_player.deckclass,
-        card_health: card_health
+        card_health: card_health,
       }
-
     end
     return opponent_data
   end
@@ -96,6 +95,7 @@ class V1::ApicardController < ApplicationController
     proceed = false
     error = ""
     players = GamePlayer.where("id  = ? and status = 1 and hasturn = 1", playerid)
+    data = []
     #game = games.first()
     if (players.length == 0)
       proceed = false
@@ -111,7 +111,7 @@ class V1::ApicardController < ApplicationController
       exists = cards.any?
 
       cardffects = CardEffectsMap.where(:cardid => cardid)
-     
+
       if (cardffects.any? == true)
         proceed = true
         error = ""
@@ -125,7 +125,8 @@ class V1::ApicardController < ApplicationController
             apply_draw?(playerid, cardeffect.count)
             #break
           when 3
-            apply_attack?(targetid, cardeffect.count)
+            data = apply_attack?(targetid, cardeffect.count)
+
             #break
           when 4
             movecard = false
@@ -143,7 +144,7 @@ class V1::ApicardController < ApplicationController
           deck_card = PlayerCard.where(:playerid => playerid, :cardid => cardid).first()
           move_card_to_discard?(deck_card.id)
         end
-        data = 
+        # data =
       else
         proceed = false
         error = "invalid card request "
@@ -157,12 +158,12 @@ class V1::ApicardController < ApplicationController
       end
 
       data = {
-        :proceed => proceed, :error => error, :udpated => true,
+        :proceed => proceed, :error => error, :updated => true, :data => data,
       }
       return data
     else
       data = {
-        :proceed => proceed, :error => error, :udpated => false,
+        :proceed => proceed, :error => error, :updated => false,
       }
       return data
     end
@@ -182,8 +183,8 @@ class V1::ApicardController < ApplicationController
     player = players.first()
     health = player.health
     health = health + count
-    if (health > 10)
-      health = 10
+    if (health > PLAYER_HEALTH)
+      health = PLAYER_HEALTH
     end
     update_player = GamePlayer.lock("FOR UPDATE NOWAIT").find_by(id: playerid)
     update_player.health = health
@@ -218,45 +219,47 @@ class V1::ApicardController < ApplicationController
         remaining_card_count = count - deck_count
 
         shuffle_cards = PlayerCard.find_by_sql("
-          select playerid, cardid, o_deckid, cur_deckid from player_cards 
+          select id,playerid, cardid, o_deckid, cur_deckid from player_cards 
           where playerid = #{playerid} and pile_type = 4
           ")
 
-        PlayerCard.find_by_sql("delete from player_cards 
-            where playerid = #{playerid} and pile_type = 4")
+        # PlayerCard.find_by_sql("delete from player_cards
+        #     where playerid = #{playerid} and pile_type = 4")
 
         shuffle_cards.shuffle.each_with_index do |card, index|
           deck_card = OpenStruct.new(card)
 
           playerid = playerid
-          cardid = deck_card.id
+          cardid = deck_card.cardid
           o_deckid = deck_card.o_deckid
           cur_deckid = deck_card.cur_deckid
           pile_type = index < remaining_card_count ? 2 : 1 ## 1-> deck, 2->hand, 3->active, 4->discard, 5-> temp
           card_health = 0
 
           PlayerCard.create(playerid: playerid, cardid: cardid, o_deckid: o_deckid, cur_deckid: cur_deckid, pile_type: pile_type, card_health: card_health)
+          PlayerCard.delete(:id => deck_card.id)
         end
       end
     else
       #shuffle discard and select count cards
       shuffle_cards = PlayerCard.find_by_sql("
-        select playerid, cardid, o_deckid, cur_deckid from player_cards 
+        select id,playerid, cardid, o_deckid, cur_deckid from player_cards 
         where playerid = #{playerid} and pile_type = 4
         ")
 
-      PlayerCard.find_by_sql("delete from player_cards 
-          where playerid = #{playerid} and pile_type = 4")
+      # PlayerCard.find_by_sql("delete from player_cards
+      #     where playerid = #{playerid} and pile_type = 4")
 
       shuffle_cards.shuffle.each_with_index do |deck_card, index|
         playerid = playerid
-        cardid = deck_card.id
+        cardid = deck_card.cardid
         o_deckid = deck_card.o_deckid
         cur_deckid = deck_card.cur_deckid
         pile_type = index < count ? 2 : 1 ## 1-> deck, 2->hand, 3->active, 4->discard, 5-> temp
         card_health = 0
 
         PlayerCard.create(playerid: playerid, cardid: cardid, o_deckid: o_deckid, cur_deckid: cur_deckid, pile_type: pile_type, card_health: card_health)
+        PlayerCard.delete(:id => deck_card.id)
       end
     end
   end
@@ -264,8 +267,10 @@ class V1::ApicardController < ApplicationController
   def apply_attack?(targetplayerid, count)
     deck_cards = PlayerCard.find_by_sql("select id,card_health from player_cards 
       where pile_type = 3 and playerid=#{targetplayerid} order by updated_at")
+    data = []
 
     remaining_count = count
+    #data << { remaining_count: remaining_count }
     if (deck_cards.any?)
       deck_cards.each do |deck_card|
         #deck_card = OpenStruct.new(card)
@@ -274,11 +279,12 @@ class V1::ApicardController < ApplicationController
           deck_card.card_health = 0
           move_card_to_discard?(deck_card.id)
           remaining_count = remaining_count - health
+          deck_card.save!
         else
           deck_card.card_health = health - remaining_count
           remaining_count = 0
+          deck_card.save!
         end
-        deck_card.save!
       end
     end
 
@@ -291,12 +297,24 @@ class V1::ApicardController < ApplicationController
           target_player.status = 0
           target_player.playcount = 0
           target_player.save!
+
+          reset_player?(targetplayerid)
         else
           target_player.health = player_health - remaining_count
           target_player.save!
         end
       end
     end
+
+    #return deck_cards
+  end
+
+  def reset_player?(playerid)
+    player = GamePlayer.where(:id => playerid, :status => 0, :health => 0).first()
+    #if player.any?
+    statement = "update player_cards set pile_type = 1, card_health = 0, cur_deckid = o_deckid where playerid = #{player.id}"
+    PlayerCard.find_by_sql(statement)
+    #end
   end
 
   def move_to_next_player?(playerid)
@@ -304,13 +322,25 @@ class V1::ApicardController < ApplicationController
     GamePlayer.update_all(:hasturn => 0)
     position = current_player.position
     gameid = current_player.gameid
-    newposition = (position + 1).remainder(4)
 
-    new_player = GamePlayer.where(:gameid => gameid, :position => newposition).first()
-    new_player.hasturn = 1
-    new_player.playcount = 1
-    new_player.save!
-    apply_draw?(new_player.id, 1)
+    totalPlayers = GamePlayer.where(:gameid => current_player.gameid).count(:id)
+
+    newposition = position
+
+    nextplayer = true
+    next_player = nil
+    while (nextplayer)
+      newposition = (newposition + 1).remainder(totalPlayers)
+      next_player = GamePlayer.where(:gameid => gameid, :position => newposition).first()
+      if (next_player.status == 1)
+        nextplayer = false
+      end
+    end
+    #new_player = GamePlayer.where(:gameid => gameid, :position => newposition).first()
+    next_player.hasturn = 1
+    next_player.playcount = 1
+    next_player.save!
+    apply_draw?(next_player.id, 1)
   end
 
   def move_card_to_discard?(id)

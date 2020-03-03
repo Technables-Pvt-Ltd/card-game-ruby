@@ -59,22 +59,19 @@ export class GamePlayer extends Component {
         let player = this.state.player;
         let userData = GetUserData();
         let handClass = '';
-        if (userData.userid === player.userid)
+        if (userData.userid === player.userid )
             handClass = 'mine';
 
+        let disabledClass = ''
+        //debugger;
+        if(player.status === 0)
+            disabledClass = 'disabled'
         return (
 
 
-            <div className={`player-container ${player.positionClass}`}>
+            <div className={`player-container ${player.positionClass} ${disabledClass}` }>
                 <div className="row">
-                    {/* {
-                        handClass.length > 0 && (
-                            <div className={`hand-pile pile  ${this.player.deckclass} ${handClass}`}>
-                                <span className="card-count">{this.player.discard_pile.length}</span>
-                                <span className="title">hand </span>
-                            </div>
-                        )
-                    } */}
+                    
                     {
                         handClass.length > 0 && (
                             <div className={`discard-pile pile  ${player.deckclass}`}>
@@ -92,8 +89,10 @@ export class GamePlayer extends Component {
 
                             {
 
-                                player.hasturn === 1 && (
-                                    <span className="playing-title">Playing...</span>
+                                player.hasturn === 1 && player.status === 1 && (
+                                    <div className="d-flex flex-column">  <span className="playing-title">Playing...</span>
+                                        <span className="playing-title text-normal">Turns left: {player.playcount}</span>
+                                    </div>
                                 )}
                         </div>
                     </div>
@@ -103,7 +102,7 @@ export class GamePlayer extends Component {
 
                             <div className={`deck-pile pile ${player.deckclass}`}>
                                 <span className={`card-count ${player.deckclass}`}>{player.deck_pile_count}</span>
-                                <span className="title">Deck </span>
+                                <span className="title">Draw </span>
                             </div>
                         )
                     }
@@ -111,13 +110,13 @@ export class GamePlayer extends Component {
 
                 </div>
 
-                {handClass.length > 0 && (
+                {handClass.length > 0 && player.status === 1 && (
                     <div className="row">
                         <div className={`hand-pile hand  ${player.deckclass} ${handClass}`}>
                             {
-                            
-                            player.hand_pile &&
-                            
+
+                                player.hand_pile &&
+
                                 player.hand_pile.map((card, index) => {
                                     return (
                                         <PlayerCard

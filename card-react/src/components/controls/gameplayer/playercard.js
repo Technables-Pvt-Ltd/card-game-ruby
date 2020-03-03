@@ -22,7 +22,7 @@ const PlayerCard = props => {
                         if (activecard && effect.effectclass === 'eff-defense')
                             count = card.card_health
 
-                        effectHtml = Array.from({ length: effect.count }, (item, index) => {
+                        effectHtml = Array.from({ length: count }, (item, index) => {
                             switch (effect.effectclass) {
                                 case 'eff-heal':
                                     return <FontAwesomeIcon key={index} className="eff-icon" icon={faHeartbeat} />

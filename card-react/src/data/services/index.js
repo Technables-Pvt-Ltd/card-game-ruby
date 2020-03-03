@@ -106,7 +106,7 @@ async function getgamedata(obj) {
   let axiosConfig = getHeader();
   var response = null;
 
-  let url = deckEndPoint.GET_GAME + `?gamecode=${obj.gamecode}`;
+  let url = deckEndPoint.GET_GAME + `?gamecode=${obj.gamecode}&firstload=${obj.isFirstLoad}`;
   response = await axios.get(url, obj, axiosConfig);
 
   return response;
@@ -136,7 +136,7 @@ async function applycardeffect(obj) {
   let axiosConfig = getHeader();
   var response = null;
 
-  let url = cardEndPoint.APPLY_CARD_EFFECT + `?cardid=${obj.cardid}&playerid=${obj.playerid}`;
+  let url = cardEndPoint.APPLY_CARD_EFFECT + `?cardid=${obj.cardid}&playerid=${obj.playerid}&targetid=${obj.targetid}`;
   response = await axios.get(url, obj, axiosConfig);
 
   return response;
