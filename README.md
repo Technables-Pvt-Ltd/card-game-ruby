@@ -66,34 +66,50 @@ So, we will need to run two projects seperately to play the game.
     $ npm install
   ```
   
-  **Step 2.3:** Update API URL
-      **Step 2.3.1:** Navigate to 'src/data/constants'
-      **Step 2.3.2:** Edit to apiroutes.js
-        ##### set HostIP = <your api ip> 
-        
+  **Step 2.3:** Update API Link
+  ```
+  - Navigate to 'src/data/constants/'
+  - Edit to apiroutes.js
+  - set HostIP = <your api ip> 
+   ```   
+   **Step 2.3:** Setup Pubnub Credentials
+  ```
+  - Go to the [PubNub Admin Dashboard] (https://admin.pubnub.com/)
+  - Create an application
+  - Click on your application. 
+  - Click on Keyset and scroll down to Application add-ons. 
+  - Toggle the Presence switch to on. Keep the default values the same.
   
+  - Navigate to 'src/data/constants/'
+  - Edit to pubnub.js
+  - set PUBNUB_PUBLISH_KEY = <publish_key_from_pubnub> 
+  - set PUBNUB_SUBSCRIBE_KEY = <subscribe_key_from_pubnub> 
+   ```     
   
-  
-  **Step 2.3:** Run the app
+  **Step 2.4:** Run the app
   ```bash
     $ npm start
   ```
   
-  This will run the rails api on port 3000: (http://localhost:3000)
+  This will run the rails api on port 3000: (http://<your-ip>:3000)
   
   
 ## Preview (screenshots)
 
-#### 1. Rails API HomePage
-  <img src="boggle-api\resources\api-home.png" alt="API Home Page" style="zoom: 60%;" />
 
-#### 2.1. Boggle Game Home
-![Web Home](boggle-front/resources/web-home.png)
+#### 2.1. Home
+![Web Home](resources/homepage.png)
 
-#### 2.2. Boggle Game Board
-![Web Board](boggle-front/resources/web-board.png)
-#### 2.3. Boggle Game ScoreBoard
-![Web Score](boggle-front/resources/web-score.png)
+#### 2.2. Choosing Deck
+![Web Create](resources/creategame.png)
+#### 2.3. Game Create
+![Web_Game Create](resources/game-created.png)
+#### 2.4. Join game
+![Web_Game Join](resources/joingame.png)
+#### 2.5. Player List
+![Web_Player_List](resources/playerjoined.png)
+#### 2.6. Game Board
+![Web_Game Create](resources/gameboard.png)
 
 
 ## Testing the Rails APIs
@@ -116,9 +132,10 @@ MIT © [Technables](https://github.com/technables)
   
   
 ## Credits and References
-
+- [Overview](https://dnd.wizards.com/products/tabletop-games/rpg-products-board-card-games/dungeon-mayhem)
+- [Rules](https://media.wizards.com/2019/dnd/downloads/DnD_Mayhem.pdf)
 - [Wikipedia Definition](https://en.wikipedia.org/wiki/Boggle)
-- [JS-Boggle-Game](https://github.com/zhouyuhang/JS-Boggle-Game)
-- [boggle-rails-react](https://github.com/zaagan/boggle-rails-react)
+- [React-Tic-Tac-Toe](https://github.com/ocastroa/react-tictactoe)
+- [Pubnub](https://admin.pubnub.com/)
   
 
