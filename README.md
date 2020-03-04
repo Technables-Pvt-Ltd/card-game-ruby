@@ -101,7 +101,7 @@ So, we will need to run two projects seperately to play the game.
 ![Web Home](resources/1.HomePage.png)
 
 #### 2.2. Choosing Deck
-![Web Create](resources/3.CreateGame.png)
+![Web Create](resources/2.CreateGame.png)
 #### 2.3. Game Create
 ![Web_Game Create](resources/3.game-created.png)
 #### 2.4. Join game
