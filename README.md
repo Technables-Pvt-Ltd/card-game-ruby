@@ -91,7 +91,7 @@ So, we will need to run two projects seperately to play the game.
     $ npm start
   ```
   
-  This will run the rails api on port 3000: (http://<your-ip>:3000)
+  This will run the rails api on port 3000: (http://<your_ip>:3000)
   
   
 ## Preview (screenshots)
