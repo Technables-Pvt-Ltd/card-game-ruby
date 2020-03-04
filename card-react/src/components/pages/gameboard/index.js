@@ -206,7 +206,7 @@ export class Board extends Component {
                     ShowMessage(msg.message.type, msg.message.data);
                     break;
                 case PUBNUB_PLAYER_TIMEOUT:
-                    this.playerTimeOut(msg.data.gamecode)
+                    this.playerTimeOut(msg.data.gamecode, msg.data.currentPlayerid)
                 default:
                     break;
             }
@@ -226,10 +226,10 @@ export class Board extends Component {
         }
     }
 
-    playerTimeOut = async gamecode => {
+    playerTimeOut = async (gamecode, currentPlayerid) => {
         clearTimeout(this.setPlayertimeout);
         this.setState({ resetTime: !this.state.resetTime })
-        await this.moveToNextPlayer(gamecode);
+        await this.moveToNextPlayer(gamecode, currentPlayerid);
 
         await this.getGameData(true);
     }
@@ -278,7 +278,7 @@ export class Board extends Component {
 
                 const userData = GetUserData();
                 let userid = userData.userid;
-
+                let currentPlayerid = 0;
                 players.map((player, index) => {
                     if (player.userid === userid) {
                         currentPlayerIndex = index;
@@ -289,9 +289,12 @@ export class Board extends Component {
                 let i = 0;
                 while (i < players.length) {
                     let player = players[(i + currentPlayerIndex) % players.length];
+                    if (player.hasturn == 1)
+                        currentPlayerid = player.id;
                     switch (i) {
                         case 0:
                             bottomPlayer = player;
+
                             bottomPlayer.positionClass = "bottom";
                             break;
                         case 2:
@@ -312,6 +315,8 @@ export class Board extends Component {
                     i++;
                 }
 
+                this.currentPlayerid = currentPlayerid;
+
                 this.props.dispatch(
                     gameactionlist.dispatchPlayerdata({
                         roomId: this.roomId,
@@ -331,7 +336,7 @@ export class Board extends Component {
                         {
                             message: {
                                 type: PUBNUB_PLAYER_TIMEOUT,
-                                data: { gamecode: this.roomId }
+                                data: { gamecode: this.roomId, currentPlayerid: this.currentPlayerid }
                             },
                             channel: this.gameChannel
                         },
@@ -345,9 +350,10 @@ export class Board extends Component {
 
     };
 
-    moveToNextPlayer = async gamecode => {
+    moveToNextPlayer = async (gamecode, currentPlayerid) => {
         let paramObj = {
-            gamecode: gamecode
+            gamecode: gamecode,
+            currentPlayerid: currentPlayerid
         }
         let applyResult = await gameactionlist.movenextplayer(paramObj);
         let applyResponse = applyResult.data.result;
