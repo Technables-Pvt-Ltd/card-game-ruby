@@ -271,3 +271,15 @@
     color: #fff;
 }
 
+.left-content {
+    width: 80%;
+}
+
+.right-content {
+    width: 20%;
+}
+
+.winner-container .card-header {
+    background: transparent !important;
+}
+

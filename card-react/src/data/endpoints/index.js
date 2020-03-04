@@ -10,7 +10,8 @@ import {
     ROUTE_API_GETGAMEDATA,
     ROUTE_API_GETPLAYERCARD,
     ROUTE_API_THROW_CARD,
-    ROUTE_API_APPLY_CARD_EFFECT
+    ROUTE_API_APPLY_CARD_EFFECT,
+    ROUTE_API_MOVE_NEXT_FORCE
 } from '../constants/apiroutes'
 
 export default {
@@ -29,6 +30,7 @@ export default {
     CARDAPI: {
         THROW_CARD: GenerateCardURI(ROUTE_API_THROW_CARD),
         APPLY_CARD_EFFECT: GenerateCardURI(ROUTE_API_APPLY_CARD_EFFECT),
+        MOVE_NEXT_PLAYER: GenerateCardURI(ROUTE_API_MOVE_NEXT_FORCE)
     }
 }
 

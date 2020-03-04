@@ -12,7 +12,8 @@ export const services = {
   getgamedata,
   getplayerdata,
   throwcard,
-  applycardeffect
+  applycardeffect,
+  movenextplayer
 }
 
 const deckEndPoint = EndPoints.DECKAPI;
@@ -137,6 +138,16 @@ async function applycardeffect(obj) {
   var response = null;
 
   let url = cardEndPoint.APPLY_CARD_EFFECT + `?cardid=${obj.cardid}&playerid=${obj.playerid}&targetid=${obj.targetid}`;
+  response = await axios.get(url, obj, axiosConfig);
+
+  return response;
+}
+
+async function movenextplayer(obj) {
+  let axiosConfig = getHeader();
+  var response = null;
+
+  let url = cardEndPoint.MOVE_NEXT_PLAYER + `?gamecode=${obj.gamecode}`;
   response = await axios.get(url, obj, axiosConfig);
 
   return response;

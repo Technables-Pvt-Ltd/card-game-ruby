@@ -11,3 +11,5 @@ export const ROUTE_API_GETGAMEDATA = "getgamedata"
 export const ROUTE_API_GETPLAYERCARD = "getplayercard"
 export const ROUTE_API_THROW_CARD = "throwcard"
 export const ROUTE_API_APPLY_CARD_EFFECT = "applycardeffect"
+export const ROUTE_API_MOVE_NEXT_FORCE = "movenextforce"
+

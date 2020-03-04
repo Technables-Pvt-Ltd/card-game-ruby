@@ -16,8 +16,8 @@ export const gameactionlist = {
     getgamedata,
     getPlayerCard,
     throwcard,
-    applycardeffect
-    
+    applycardeffect,
+    movenextplayer
 }
 
 function pubnubint(config) {
@@ -210,6 +210,21 @@ async function throwcard  (obj) {
 async function applycardeffect(obj) {
     let result = null;
     await services.applycardeffect(obj).then(
+        res => {
+            if (res && res.data) {
+                let respObj = res.data;
+                if (respObj.success)
+                    result = respObj.data;
+            }
+        }, err => { console.log(err) }
+    ) 
+
+    return result;
+}
+
+async function movenextplayer(obj) {
+    let result = null;
+    await services.movenextplayer(obj).then(
         res => {
             if (res && res.data) {
                 let respObj = res.data;

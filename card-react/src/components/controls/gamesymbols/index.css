@@ -1,13 +1,16 @@
+.symbol-container {
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
 .list-group-item .eff-icon {
     color: #1b1b1b;
-    font-size: 14px;
-    margin-right: 10px;
+    font-size: 11px;
+    margin-right: 5px;
 }
 
 .list-group-item .effect-title, .list-group-item .title {
-    font-size: 16px;
-    margin-right: 10px;
-    line-height: 16px;
+    font-size: 12px;
 }
 
 .symbol-container .list-group-item:hover {

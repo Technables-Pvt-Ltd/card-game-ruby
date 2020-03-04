@@ -352,6 +352,25 @@ class V1::ApicardController < ApplicationController
     discard_card.save!
   end
 
+  def move_next_force?(gamecode)
+    game = CardGame.where(:code => gamecode).first()
+
+    active_players_count = GamePlayer.where(:gameid => game.id, :status => 1).count(:id)
+
+    if (active_players_count > 1)
+      timeout_player = GamePlayer.where(:gameid => game.id, :hasturn => 1).first()
+      timeout_player.health = 0
+      timeout_player.status = 0
+      timeout_player.save!
+      #player = OpenStruct.new(timeout_player);
+      reset_player?(timeout_player.id)
+      move_to_next_player?(timeout_player.id)
+    end
+    data = {
+      :proceed => true, :error => "", :updated => true,
+    }
+  end
+
   ####################################################
   ################### API LIST #######################
   ####################################################
@@ -400,6 +419,33 @@ class V1::ApicardController < ApplicationController
     if proceed
       result = apply_card_effect?(cardid, playerid, targetid)
       message = MSG_EFFECT_APPLIED
+      success = true
+      data = {
+        :data => { result: result },
+      }
+
+      response_data = ApiResponse.new(message, success, data)
+    else
+      response_data = ApiResponse.new(err_msg, proceed, nil)
+    end
+    render json: response_data, status: STATUS_OK
+  end
+
+  def movenextforce
+    gamecode = params[:gamecode]
+
+    status = STATUS_OK
+    proceed = true
+    err_msg = ""
+    if (!params[:gamecode].present?) || gamecode.nil?
+      proceed = false
+      err_msg = MSG_PARAM_MISSING
+      status = STATUS_NOT_FOUND
+    end
+
+    if proceed
+      result = move_next_force?(gamecode)
+      message = MSG_PLAYER_TIMEOUT
       success = true
       data = {
         :data => { result: result },

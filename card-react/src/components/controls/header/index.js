@@ -6,28 +6,29 @@ import Logo from '../../../logo.jpg';
 import './index.css'
 import { ROUTE_SITE_ROOT } from '../../../data/constants/routes';
 export class Header extends Component {
-    constructor(props) {
-        super(props);
-    }
+
     logoClick = () => {
-        //debugger;
-        //if (this.props.history.canGoBack)
-            this.props.history.goBack();
-        
+        this.props.history.push(ROUTE_SITE_ROOT);
+
     }
     render() {
         return (
-            <div className="logo-wrapper flex">
-                <div className="row">
-                    <div className="col-8 logo-container">
+            <div className="logo-wrapper d-flex">
+                <div className="row d-flex flex-row">
+                    <div className="logo-container col-3">
                         <img
                             className="logo"
                             src={Logo}
                             onClick={this.logoClick}
                             alt="Dungeon Mayhem"
                         />
-
+                        
                     </div>
+                    <div className=" col-9">
+                            <p className="h3">Dungeon Mayhem</p>
+                            {/* <small className="text-muted">Play the popular Dragon game built with react and ruby on rails</small> */}
+
+                        </div>
                 </div>
 
             </div>

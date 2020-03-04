@@ -478,9 +478,14 @@ class V1::ApideckController < ApplicationController
     current_player = GamePlayer.where(:hasturn => 1).first()
     GamePlayer.update_all(:hasturn => 0)
 
-    current_player.hasturn = 1
-    current_player.playcount = current_player.playcount + 1
-    current_player.save!
+    if current_player.nil?
+      game = GamePlayer.where(:id => playerid).first()
+      select_random_player?(game.id)
+    else
+      current_player.hasturn = 1
+      current_player.playcount = current_player.playcount + 1
+      current_player.save!
+    end
   end
 
   def move_card_to_deck?(id)

@@ -1,0 +1,68 @@
+import React, { Component } from "react";
+import {
+    faHeartbeat,
+    faShieldAlt,
+    faEject,
+    faReply,
+    faKhanda
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import "./index.css";
+
+class GameGuides extends Component {
+    render() {
+        return (
+            <div className="d-flex flex-column align-items-left justify-content-center comp-gameguide">
+
+
+                <div className="symbol-container">
+                    <div className="d-flex justify-content-between">
+                        <p> Here are some of game guides.</p>
+                    </div>
+                    <ul className="list-group card-instructions">
+                        <li className="list-group-item">
+                            <span className="title">1. Player Data</span>
+                            <ul className="list-group list-group-flush">
+                                <li className="list-group-item">1 (a). Player name</li>
+                                <li className="list-group-item">1 (b). Player Health</li>
+                            </ul>
+                        </li>
+                        <li className="list-group-item">
+                            <span className="title">2. Hand Pile</span>
+                            <ul className="list-group list-group-flush">
+                                <li className="list-group-item">2 (a). Hand Card</li>
+                                <li className="list-group-item">2 (b). Card effects</li>
+                            </ul>
+                        </li>
+                        <li className="list-group-item">
+                            <span className="title">3. Active Pile</span>
+                            <ul className="list-group list-group-flush">
+                                <li className="list-group-item">3 (a). Active/Defense Card</li>
+                            </ul>
+                        </li>
+                        <li className="list-group-item">
+                            <span className="title">4. Board</span>
+                            <ul className="list-group list-group-flush">
+                                <li className="list-group-item">4 (a). Thrown Card</li>
+                            </ul>
+                        </li>
+                        <li className="list-group-item">
+                            <span className="title">5. Draw Pile</span>
+                            <ul className="list-group list-group-flush">
+                                <li className="list-group-item">5 (a). Avaiable Card Count</li>
+                            </ul>
+                        </li>
+                        <li className="list-group-item">
+                            <span className="title">6. Discard Pile</span>
+                            <ul className="list-group list-group-flush">
+                                <li className="list-group-item">6 (a). Discarded card count</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        );
+    }
+}
+
+export default GameGuides;

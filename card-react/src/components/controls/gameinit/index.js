@@ -155,10 +155,7 @@ export class GameInit extends Component {
       gamecode: this.roomId
     });
 
-    // this.props.dispatch(gameactionlist.gamestart({
-    //   roomId: this.roomId, lobbyChannel: this.lobbyChannel, gameChannel: this.gameChannel, isPlaying:true, isDisabled:true
-    // }));
-
+   
     this.props.history.push(url);
   }
 
@@ -217,7 +214,7 @@ export class GameInit extends Component {
     let decks = await this.getDeckList(roomId);
     let isSelectedCount = 0;
     let swalliData = "";
-    let mapData = decks.map((deck, index) => {
+    decks.map((deck, index) => {
       let extraClass = deck.isselected
         ? "fa fa-check success"
         : "fa fa-question pending";
@@ -230,8 +227,6 @@ export class GameInit extends Component {
                     </div>
                 </li> `;
     });
-
-    console.log(mapData);
 
     let swalHtml = ` <div className="game-room">
                                 <div className="row room-header">

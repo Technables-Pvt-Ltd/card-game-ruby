@@ -20,6 +20,7 @@ Rails.application.routes.draw do
 
     get "card/throwcard", to:'apicard#throwcard'
     get "card/applycardeffect", to: 'apicard#applycardeffect'
+    get "card/movenextforce", to: 'apicard#movenextforce'
   end
 
   root 'home#index'

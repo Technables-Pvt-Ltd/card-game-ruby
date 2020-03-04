@@ -1,5 +1,5 @@
 import { SaveDataToStore, GetDataFromStore } from "../datastore/storagehelper";
-import { User_Data, User_Detail } from "../constants/constants";
+import { User_Detail } from "../constants/constants";
 import shortid from 'shortid'
 
 /*

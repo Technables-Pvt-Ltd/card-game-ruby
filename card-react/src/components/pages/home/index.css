@@ -25,3 +25,7 @@ li.list-group-item-flush {
 .list-group-item {
     padding: 0.45rem 1.25rem !important;
 }
+
+.comp-gameguide {
+    margin-top: 10px;
+}
