@@ -1,4 +1,7 @@
-export const ROUTE_API_URL = "http://localhost:3001/";
+export const HostIP = "localhost";
+//export const HostIP = '172.18.13.234';
+
+export const ROUTE_API_URL = `http://${HostIP}:3001/`;
 //export const ROUTE_API_URL = "http://172.18.13.234:3001/";
 export const ROUTE_API_INITDECK = "init"
 export const ROUTE_API_INITGAME = "initgame"
