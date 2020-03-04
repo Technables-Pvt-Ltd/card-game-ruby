@@ -46,8 +46,9 @@ So, we will need to run two projects seperately to play the game.
   ```bash
     $ rake db:migrate
   ```
-  #### This game is played by multiplayer. So we need to host the api using our IP.
+ 
   **Step 1.4:** Run rails server
+   #### This game is played by multiplayer. So we need to host the api using our IP.
   ```bash
     $ rails server -b <your_ip> -p 3001
   ```
@@ -58,12 +59,21 @@ So, we will need to run two projects seperately to play the game.
 ### Step 2: Setting Up React Front-End
   **Step 2.1:** Navigate to React Project
   ```bash
-    $ cd boggle-front
+    $ cd card-react
   ```
   **Step 2.2:** Install all related packages for project
   ```bash
     $ npm install
   ```
+  
+  **Step 2.3:** Update API URL
+      **Step 2.3.1:** Navigate to 'src/data/constants'
+      **Step 2.3.2:** Edit to apiroutes.js
+        ##### set HostIP = <your api ip> 
+        
+  
+  
+  
   **Step 2.3:** Run the app
   ```bash
     $ npm start
