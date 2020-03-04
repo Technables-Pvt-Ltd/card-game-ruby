@@ -147,7 +147,7 @@ async function movenextplayer(obj) {
   let axiosConfig = getHeader();
   var response = null;
 
-  let url = cardEndPoint.MOVE_NEXT_PLAYER + `?gamecode=${obj.gamecode}`;
+  let url = cardEndPoint.MOVE_NEXT_PLAYER + `?gamecode=${obj.gamecode}&currentplayer=${obj.currentPlayerid}`;
   response = await axios.get(url, obj, axiosConfig);
 
   return response;

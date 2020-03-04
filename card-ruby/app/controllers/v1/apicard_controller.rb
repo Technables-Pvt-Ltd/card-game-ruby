@@ -352,19 +352,22 @@ class V1::ApicardController < ApplicationController
     discard_card.save!
   end
 
-  def move_next_force?(gamecode)
+  def move_next_force?(gamecode, playerid)
     game = CardGame.where(:code => gamecode).first()
 
     active_players_count = GamePlayer.where(:gameid => game.id, :status => 1).count(:id)
 
     if (active_players_count > 1)
-      timeout_player = GamePlayer.where(:gameid => game.id, :hasturn => 1).first()
-      timeout_player.health = 0
-      timeout_player.status = 0
-      timeout_player.save!
-      #player = OpenStruct.new(timeout_player);
-      reset_player?(timeout_player.id)
-      move_to_next_player?(timeout_player.id)
+      timeout_player = GamePlayer.where(:gameid => game.id, :playerid=>playerid, :hasturn => 1).first()
+      #player_exists = timeout_player.nil?
+      if(!timeout_player.nil?)
+        timeout_player.health = 0
+        timeout_player.status = 0
+        timeout_player.save!
+        #player = OpenStruct.new(timeout_player);
+        reset_player?(timeout_player.id)
+        move_to_next_player?(timeout_player.id)
+      end
     end
     data = {
       :proceed => true, :error => "", :updated => true,
@@ -433,18 +436,19 @@ class V1::ApicardController < ApplicationController
 
   def movenextforce
     gamecode = params[:gamecode]
+    playerid = params[:currentPlayerid]
 
     status = STATUS_OK
     proceed = true
     err_msg = ""
-    if (!params[:gamecode].present?) || gamecode.nil?
+    if (!params[:gamecode].present?|| !params[:currentPlayerid].present?) || gamecode.nil? || playerid.nil?
       proceed = false
       err_msg = MSG_PARAM_MISSING
       status = STATUS_NOT_FOUND
     end
 
     if proceed
-      result = move_next_force?(gamecode)
+      result = move_next_force?(gamecode, playerid)
       message = MSG_PLAYER_TIMEOUT
       success = true
       data = {
