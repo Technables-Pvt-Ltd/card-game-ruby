@@ -98,18 +98,18 @@ So, we will need to run two projects seperately to play the game.
 
 
 #### 2.1. Home
-![Web Home](resources/HomePage.png)
+![Web Home](resources/1.HomePage.png)
 
 #### 2.2. Choosing Deck
-![Web Create](resources/CreateGame.png)
+![Web Create](resources/2.CreateGame.png)
 #### 2.3. Game Create
-![Web_Game Create](resources/game-created.png)
+![Web_Game Create](resources/3.game-created.png)
 #### 2.4. Join game
-![Web_Game Join](resources/joingame.png)
+![Web_Game Join](resources/4.joingame.png)
 #### 2.5. Player List
-![Web_Player_List](resources/playerjoined.png)
+![Web_Player_List](resources/5.playerjoined.png)
 #### 2.6. Game Board
-![Web_Game Create](resources/gameboard.png)
+![Web_Game Create](resources/6.gameboard.png)
 
 
 ## Testing the Rails APIs
