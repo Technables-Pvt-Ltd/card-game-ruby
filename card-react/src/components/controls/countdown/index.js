@@ -27,7 +27,7 @@ class CountDown extends React.Component {
 
   render() {
     return (
-      <div class='d-flex flex-column timer-wrapper'>
+      <div className='d-flex flex-column timer-wrapper'>
         <p className="h7">Time Remaining: {this.state.seconds} seconds</p>
         <span className="span-border-bottom"></span>
         <div className="hour-glass">

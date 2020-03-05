@@ -35,7 +35,7 @@ export class Board extends Component {
         this.player = null;
         this.gameChannel = Card_Game_Initials + gamecode;
         this.subscribeChannel(this.gameChannel);
-        this.setState({ resetTime: true })
+        this.setState({ resetTime: true, firstCall: true })
     }
 
     initPubNub = () => {
@@ -156,6 +156,7 @@ export class Board extends Component {
     applycardeffect = async (paramobj, cardid) => {
         let applyResult = await gameactionlist.applycardeffect(paramobj);
         let applyResponse = applyResult.data.result;
+
         if (applyResponse.updated === true) {
             this.pubnub.publish(
                 {
@@ -193,6 +194,7 @@ export class Board extends Component {
     }
 
     handlePubNubMessage = msg => {
+
         if (msg.type) {
             switch (msg.type) {
                 case PUBNUB_THROW_CARD:
@@ -206,7 +208,12 @@ export class Board extends Component {
                     ShowMessage(msg.message.type, msg.message.data);
                     break;
                 case PUBNUB_PLAYER_TIMEOUT:
-                    this.playerTimeOut(msg.data.gamecode, msg.data.currentPlayerid)
+                    //if (this.refreshCount == 1) {
+                    //this.refreshCount++;
+                    if (this.state.firstCall)
+                        this.playerTimeOut(msg.data.gamecode, msg.data.currentPlayerid)
+                    this.setState({ firstCall: false });
+                //}
                 default:
                     break;
             }
@@ -222,22 +229,47 @@ export class Board extends Component {
     applycard = async updated => {
         if (updated === true) {
             clearTimeout(this.timeout);
+            clearTimeout(this.setPlayertimeout);
+            
+            this.setState({ resetTime: !this.state.resetTime })
             await this.getGameData(false);
         }
     }
 
     playerTimeOut = async (gamecode, currentPlayerid) => {
         clearTimeout(this.setPlayertimeout);
-        this.setState({ resetTime: !this.state.resetTime })
-        await this.moveToNextPlayer(gamecode, currentPlayerid);
+        clearTimeout(this.timeout);
+        this.setPlayertimeout = null;
 
-        await this.getGameData(true);
+        this.setState({ resetTime: !this.state.resetTime })
+        await this.getGameData(false);
+       // await this.moveToNextPlayer(gamecode, currentPlayerid);
+
+
     }
 
 
 
     componentDidMount = async () => {
         await this.getGameData(true);
+    };
+
+    componentWillUnmount() {
+        clearTimeout(this.setPlayertimeout);
+        clearTimeout(this.timeout);
+        this.unsubscribe(this.gameChannel);
+    }
+
+    unsubscribe = channel => {
+        this.pubnub.unsubscribe({
+            channels: [channel]
+        });
+
+        this.gameChannel = null;
+
+        // this.props.dispatch(gameactionlist.gamestart({
+        //   roomId: this.roomId, lobbyChannel: this.lobbyChannel, gameChannel: this.gameChannel, isPlaying: false, isDisabled: false
+        // }));
     };
 
     getGameData = async isFirstLoad => {
@@ -290,7 +322,7 @@ export class Board extends Component {
                 while (i < players.length) {
                     let player = players[(i + currentPlayerIndex) % players.length];
                     if (player.hasturn == 1)
-                        currentPlayerid = player.id;
+                        currentPlayerid = player.playerid;
                     switch (i) {
                         case 0:
                             bottomPlayer = player;
@@ -329,19 +361,20 @@ export class Board extends Component {
                         rightPlayer: rightPlayer
                     })
                 );
-                this.setState({ resetTime: true })
+                this.setState({ resetTime: true, firstCall: true })
+                //debugger;
+                if (this.setPlayertimeout) {
+                    clearTimeout(this.setPlayertimeout);
+                    this.setPlayertimeout = null;
+                   
+                }
+                //console.log(this.setPlayertimeout);
+                this.refreshCount = 0;
                 this.setPlayertimeout = setTimeout(async () => {
+                    await this.moveToNextPlayer(this.roomId, this.currentPlayerid);
 
-                    this.pubnub.publish(
-                        {
-                            message: {
-                                type: PUBNUB_PLAYER_TIMEOUT,
-                                data: { gamecode: this.roomId, currentPlayerid: this.currentPlayerid }
-                            },
-                            channel: this.gameChannel
-                        },
-                        (status, response) => { }
-                    );
+
+                    
                 }, 30000);
                 // this.setState({ isPlaying: true })
             }
@@ -359,6 +392,18 @@ export class Board extends Component {
         let applyResponse = applyResult.data.result;
         if (applyResponse.updated === true) {
 
+            this.pubnub.publish(
+                {
+                    message: {
+                        type: PUBNUB_PLAYER_TIMEOUT,
+                        data: { gamecode: this.roomId, currentPlayerid: this.currentPlayerid }
+                    },
+                    channel: this.gameChannel
+                },
+                (status, response) => { }
+            );
+
+            
         }
     }
 
@@ -397,7 +442,7 @@ export class Board extends Component {
                                     onClick={this.onHomeClick}
                                 >
                                     Go to Home
-                </span>
+                                </span>
                             </div>
                         </div>
                     </div>
