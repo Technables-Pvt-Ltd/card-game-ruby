@@ -580,7 +580,7 @@ class V1::ApideckController < ApplicationController
     else
       response_data = ApiResponse.new(err_msg, proceed, nil)
     end
-    render json: response_data, status: STATUS_OK
+    render json: response_data, status: status
   end
 
   def getgamedeck
@@ -607,7 +607,7 @@ class V1::ApideckController < ApplicationController
     else
       response_data = ApiResponse.new(err_msg, proceed, nil)
     end
-    render json: response_data, status: STATUS_OK
+    render json: response_data, status: status
   end
 
   def addplayer
@@ -636,7 +636,7 @@ class V1::ApideckController < ApplicationController
     else
       response_data = ApiResponse.new(err_msg, proceed, nil)
     end
-    render json: response_data, status: STATUS_OK
+    render json: response_data, status: status
   end
 
   def removeplayer
@@ -665,7 +665,7 @@ class V1::ApideckController < ApplicationController
     else
       response_data = ApiResponse.new(err_msg, proceed, nil)
     end
-    render json: response_data, status: STATUS_OK
+    render json: response_data, status: status
   end
 
   def closegame
@@ -693,7 +693,7 @@ class V1::ApideckController < ApplicationController
     else
       response_data = ApiResponse.new(err_msg, proceed, nil)
     end
-    render json: response_data, status: STATUS_OK
+    render json: response_data, status: status
   end
 
   def startgame
@@ -721,7 +721,7 @@ class V1::ApideckController < ApplicationController
     else
       response_data = ApiResponse.new(err_msg, proceed, nil)
     end
-    render json: response_data, status: STATUS_OK
+    render json: response_data, status: status
   end
 
   def getGameData
@@ -753,7 +753,7 @@ class V1::ApideckController < ApplicationController
     else
       response_data = ApiResponse.new(err_msg, proceed, nil)
     end
-    render json: response_data, status: STATUS_OK
+    render json: response_data, status: status
   end
 
   def getplayercard
@@ -780,6 +780,6 @@ class V1::ApideckController < ApplicationController
     else
       response_data = ApiResponse.new(err_msg, proceed, nil)
     end
-    render json: response_data, status: STATUS_OK
+    render json: response_data, status: status
   end
 end

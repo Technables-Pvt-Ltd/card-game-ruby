@@ -424,7 +424,7 @@ class V1::ApicardController < ApplicationController
     else
       response_data = ApiResponse.new(err_msg, proceed, nil)
     end
-    render json: response_data, status: STATUS_OK
+    render json: response_data, status: status
   end
 
   def applycardeffect
@@ -453,7 +453,7 @@ class V1::ApicardController < ApplicationController
     else
       response_data = ApiResponse.new(err_msg, proceed, nil)
     end
-    render json: response_data, status: STATUS_OK
+    render json: response_data, status: status
   end
 
   def movenextforce
@@ -481,6 +481,6 @@ class V1::ApicardController < ApplicationController
     else
       response_data = ApiResponse.new(err_msg, proceed, nil)
     end
-    render json: response_data, status: STATUS_OK
+    render json: response_data, status: status
   end
 end
