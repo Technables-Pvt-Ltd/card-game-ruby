@@ -6,9 +6,6 @@ export function ShowMessage(type, msg) {
         position: toast.POSITION.TOP_RIGHT
     };
 
-    // toast.warn(msg, option);
-    // toast.success(msg, option);
-    // toast.error(msg, option);
     switch (type) {
         case TOAST_SUCCESS:
             toast.success(msg, option);

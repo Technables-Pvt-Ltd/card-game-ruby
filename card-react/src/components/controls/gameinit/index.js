@@ -37,8 +37,6 @@ export class GameInit extends Component {
     this.gameChannel = null;
     this.masterdeck = [];
     this.getDeckMasterList();
-    //this.setState({masterdeck: []});
-    //  this.state = { masterdeck: [] };
   }
 
   initPubNub = () => {
@@ -70,9 +68,6 @@ export class GameInit extends Component {
     this.lobbyChannel = null;
     this.gameChannel = null;
 
-    // this.props.dispatch(gameactionlist.gamestart({
-    //   roomId: this.roomId, lobbyChannel: this.lobbyChannel, gameChannel: this.gameChannel, isPlaying: false, isDisabled: false
-    // }));
   };
 
   subscribeChannel = channel => {
@@ -88,7 +83,6 @@ export class GameInit extends Component {
       channel: channel
     });
 
-    //this.setState({ publishMsg: true });
   };
 
   generateMessageObj = (type, msg) => {
@@ -104,7 +98,6 @@ export class GameInit extends Component {
       switch (msg.type) {
         case PUBNUB_JOIN:
 
-          //this.subscribeChannel(this.gameChannel);
           break;
         case PUBNUB_DECKSELECT:
           this.displayRoomStatusModal(this.roomId, msg.isRoomCreator);
@@ -112,7 +105,6 @@ export class GameInit extends Component {
             data: "New Player Joined",
             type: TOAST_SUCCESS
           });
-          // this.publishMessage(this.lobbyChannel, message);
           break;
 
         case PUBNUB_DECKLEAVE:
@@ -200,7 +192,6 @@ export class GameInit extends Component {
         }
       });
       if (deckID) {
-        //this.displayRoomStatusModal(this.roomId, false);
         this.joinGame(this.roomId, deckID);
 
         this.setState({ isDeckSelcted: true, deckid: deckID });
@@ -209,8 +200,7 @@ export class GameInit extends Component {
   };
 
   displayRoomStatusModal = async (roomId, isRoomCreator) => {
-    //let decks = data.decks;
-
+    
     let decks = await this.getDeckList(roomId);
     let isSelectedCount = 0;
     let swalliData = "";
@@ -253,8 +243,8 @@ export class GameInit extends Component {
         this.state.isRoomCreator === true && isSelectedCount > 1,
       showCancelButton: true,
       cancelButtonText: this.state.isRoomCreator
-        ? '<i class="fa fa-thumbs-down"></i>Close'
-        : '<i class="fa fa-thumbs-down"></i> Leave',
+        ? '<i class="fa fa-paper-plane"></i>Close'
+        : '<i class="fa fa-paper-plane"></i> Leave',
       confirmButtonText: "Start Game",
       footer:
         this.state.isRoomCreator === true
@@ -367,11 +357,6 @@ export class GameInit extends Component {
       this.createGame(this.roomId, deckID);
     }
 
-    // const { dispatch } = this.props;
-
-    // dispatch(gameactionlist.pubnubint({
-    //     roomId: this.roomId, lobbyChannel: this.lobbyChannel
-    // }));
   };
 
   createGame = async (roomid, deckID) => {
@@ -518,7 +503,6 @@ export class GameInit extends Component {
         (status, response) => { }
       );
     }
-    //});
   };
 
   onGameLeave = async (roomId, deckid) => {
@@ -544,7 +528,6 @@ export class GameInit extends Component {
       this.displayRoomStatusModal(this.roomId, false);
     } else {
       this.setState({ deckid: "" });
-      //this.displayRoomStatusModal(this.roomId, false);
       this.pubnub.publish(
         {
           message: {
@@ -579,7 +562,6 @@ export class GameInit extends Component {
       });
     } else {
       this.setState({ deckid: "" });
-      //this.displayRoomStatusModal(this.roomId, false);
       this.pubnub.publish(
         {
           message: {

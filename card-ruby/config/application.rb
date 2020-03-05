@@ -3,12 +3,10 @@ require_relative 'boot'
 require 'rails/all'
 
 
-require_relative '../lib/card_data.rb'
-require_relative '../lib/deck_data.rb'
+
 require_relative '../lib/game_data.rb'
 require_relative '../lib/api_messages.rb'
 require_relative '../lib/db_controller.rb'
-require_relative '../lib/seed_data.rb'
 require_relative '../lib/game_status.rb'
 require_relative '../lib/open_struct.rb'
 

@@ -18,17 +18,15 @@ export default class GameInfo extends Component {
                         </ul>
                     </li>
                     <li className="list-group-item">6. A random player in selected to take the first "turn"</li>
-                    <li className="list-group-item">7. Each player will get 30 seconds for each turn</li>
+                    <li className="list-group-item">7. Each player will get 30 seconds for each turn. Once timers hits 30, current player is removed from game and turn is transferred to next active player</li>
                     <li className="list-group-item">8. As the player take his/her turn:
-                                        <ul className="list-group list-group-flush">
+                        <ul className="list-group list-group-flush">
                             <li className="list-group-item">a. A card is drawn from his/her "draw pile"</li>
                             <li className="list-group-item">b. A card from "hand" is played and each effect associated with card is executed
 
-                                            <ul className="list-group list-group-flush">
+                                <ul className="list-group list-group-flush">
                                     <li className="list-group-item list-group-item-flush">i. depending on the effects in the card, the player may need to select a target Player or Card</li>
                                     <li className="list-group-item list-group-item-flush">ii. depending on the card, the player may get to play again (i.e. choose another card from their hand to play)</li>
-
-
                                 </ul>
                             </li>
                             <li className="list-group-item">c. Played card(s) is placed in the "discard" pile</li>

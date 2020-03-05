@@ -8,8 +8,6 @@ class V1::ApicardController < ApplicationController
     proceed = false
     error = ""
     players = GamePlayer.where("id  = ? and status = 1 and hasturn = 1 and playcount > 0", playerid)
-    #player = GamePlayer.where("id  = ? and status = 1 and playcount > 0 ", playerid)
-    #game = games.first()
     if (players.length == 0)
       proceed = false
       error = "invalid player request"
@@ -96,7 +94,6 @@ class V1::ApicardController < ApplicationController
     error = ""
     players = GamePlayer.where("id  = ? and status = 1 and hasturn = 1", playerid)
     data = []
-    #game = games.first()
     if (players.length == 0)
       proceed = false
       error = "invalid player request"
@@ -204,13 +201,11 @@ class V1::ApicardController < ApplicationController
       deck_count = deck_cards.length
       if dec_count = count
         deck_cards.each do |deck_card|
-          #card = OpenStruct.new(deck_card)
           deck_card.pile_type = 2
           deck_card.save!
         end
       else
         deck_cards.each do |deck_card|
-          #deck_card = OpenStruct.new(deck_card)
           deck_card.pile_type = 2
           deck_card.save!
         end
@@ -223,9 +218,7 @@ class V1::ApicardController < ApplicationController
           where playerid = #{playerid} and pile_type = 4
           ")
 
-        # PlayerCard.find_by_sql("delete from player_cards
-        #     where playerid = #{playerid} and pile_type = 4")
-
+        
         shuffle_cards.shuffle.each_with_index do |card, index|
           deck_card = OpenStruct.new(card)
 
@@ -248,9 +241,7 @@ class V1::ApicardController < ApplicationController
         where playerid = #{playerid} and pile_type = 4
         ")
 
-      # PlayerCard.find_by_sql("delete from player_cards
-      #     where playerid = #{playerid} and pile_type = 4")
-
+      
       shuffle_cards.shuffle.each_with_index do |deck_card, index|
         playerid = playerid
         cardid = deck_card.cardid
@@ -260,8 +251,7 @@ class V1::ApicardController < ApplicationController
         card_health = 0
 
         PlayerCard.create(playerid: playerid, cardid: cardid, o_deckid: o_deckid, cur_deckid: cur_deckid, pile_type: pile_type, card_health: card_health)
-        #PlayerCard.delete(:id => deck_card.id)
-      end
+        end
 
       PlayerCard.where(:playerid => playerid, :pile_type => 4).delete_all()
     end
@@ -314,9 +304,7 @@ class V1::ApicardController < ApplicationController
 
   def reset_player?(playerid)
     player = GamePlayer.lock("FOR UPDATE NOWAIT").find_by(:id => playerid, :status => 0, :health => 0)
-    #if player.any?
-    #PlayerCard.lock("FOR UPDATE NOWAIT").where(:playerid => player.id).update_all(:pile_type => 1, :card_health => 0, :cur_deckid => :o_deckid)
-
+    
     statement = "update player_cards set pile_type = 1, card_health = 0, cur_deckid = o_deckid where playerid = #{player.id}"
     PlayerCard.find_by_sql(statement)
     #end
@@ -346,7 +334,6 @@ class V1::ApicardController < ApplicationController
     end
     next_player = GamePlayer.lock("FOR UPDATE NOWAIT").find_by(:gameid => gameid, :position => newposition)
 
-    #new_player = GamePlayer.where(:gameid => gameid, :position => newposition).first()
     next_player.hasturn = 1
     next_player.playcount = 1
     next_player.save!
@@ -365,7 +352,6 @@ class V1::ApicardController < ApplicationController
   def move_next_force?(gamecode, playerid)
     currenttime = DateTime.now
     checktime = currenttime - 30.seconds
-    #statement = 'select * from game_players where strftime("%s","now") - strftime("%s",updated_at) > 25'
     timeout_player = GamePlayer.lock("FOR UPDATE NOWAIT").where("id = ? and hasturn = ? and strftime('%s','now') - strftime('%s',updated_at) >= ?", playerid, 1, 25).first()
 
     if (!timeout_player.nil?)
@@ -373,19 +359,14 @@ class V1::ApicardController < ApplicationController
       game = CardGame.lock("FOR UPDATE NOWAIT").find_by(:code => gamecode)
       game.save!
       active_players_count = GamePlayer.lock("FOR UPDATE NOWAIT").where(:gameid => game.id, :status => 1).count(:id)
-      #active_players_count.save!
       if (active_players_count > 1)
-        #GamePlayer.where(:gameid => game.id, :id=>playerid, :hasturn => 1).first()
-        #player_exists = timeout_player.nil?
-        timeout_player = GamePlayer.lock("FOR UPDATE NOWAIT").find_by(:id => playerid, :hasturn => 1)
+         timeout_player = GamePlayer.lock("FOR UPDATE NOWAIT").find_by(:id => playerid, :hasturn => 1)
         if (!timeout_player.nil?)
           timeout_player.health = 0
           timeout_player.status = 0
           timeout_player.playcount = 0
           timeout_player.save!
-          #player = OpenStruct.new(timeout_player);
           reset_player?(timeout_player.id)
-
           move_to_next_player?(timeout_player.id)
         end
         #end

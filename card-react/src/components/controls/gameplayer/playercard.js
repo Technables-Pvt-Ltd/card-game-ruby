@@ -1,5 +1,4 @@
 import React from 'react'
-import { connect } from 'react-redux'
 import { faHeartbeat, faShieldAlt, faEject, faReply, faKhanda } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -11,9 +10,6 @@ const PlayerCard = props => {
         <div className={`deck-card ${deckclass} ${clicked ? 'clicked' : ''}`} key={card.cardid} onClick={handleCardClick && handleCardClick.bind(this, card.cardid, clicked)}>
             <div className='effect' key={card.cardid}>
                 {
-
-
-
                     card.effects.map((effect, index) => {
 
                         let effectHtml = ''
@@ -38,9 +34,7 @@ const PlayerCard = props => {
                                 default:
                                     return <span className={`card-effect ${effect.effectclass}`} key={card.cardid + '_' + effect.id + '_' + index}>{effect.name.substring(0, 2)}</span>;
                             }
-                        }
-                            // <span className={`card-effect ${effect.effectclass}`} key={card.cardid + '_' + effect.id + '_' + index}>{effect.name.substring(0,2)}</span>
-                        );
+                        });
 
                         return (<div key={index} className="effect-wrapper">{effectHtml}</div>)
                     })
@@ -52,12 +46,5 @@ const PlayerCard = props => {
 
 }
 
-const mapStateToProps = (state) => ({
 
-})
-
-const mapDispatchToProps = {
-
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(PlayerCard)
+export default PlayerCard;

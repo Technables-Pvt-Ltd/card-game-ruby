@@ -3,3 +3,21 @@
 // You can use Sass (SCSS) here: https://sass-lang.com/
 
 @import "bootstrap";
+
+body{
+    font-size: 16px;
+    font-weight: 300;
+}
+
+.container-head {
+    margin-top: 20px;
+    
+}
+
+.container-head img {
+    height: 100px;
+}
+
+.container-body{
+    margin-top: 25px;
+}

@@ -8,6 +8,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./index.css";
+import GameHint from '../../../GameHint.png';
 
 class GameGuides extends Component {
     render() {
@@ -16,49 +17,18 @@ class GameGuides extends Component {
 
 
                 <div className="symbol-container">
-                    <div className="d-flex justify-content-between">
-                        <p> Here are some of game guides.</p>
+                    <div className="d-flex justify-content-between flex-column ">
+                        <p> Here are some of game hint.</p>
+                        <small className='text-muted'>Click on the image to enlarge</small>
                     </div>
-                    <ul className="list-group card-instructions">
-                        <li className="list-group-item">
-                            <span className="title">1. Player Data</span>
-                            <ul className="list-group list-group-flush">
-                                <li className="list-group-item">1 (a). Player name</li>
-                                <li className="list-group-item">1 (b). Player Health</li>
-                            </ul>
-                        </li>
-                        <li className="list-group-item">
-                            <span className="title">2. Hand Pile</span>
-                            <ul className="list-group list-group-flush">
-                                <li className="list-group-item">2 (a). Hand Card</li>
-                                <li className="list-group-item">2 (b). Card effects</li>
-                            </ul>
-                        </li>
-                        <li className="list-group-item">
-                            <span className="title">3. Active Pile</span>
-                            <ul className="list-group list-group-flush">
-                                <li className="list-group-item">3 (a). Active/Defense Card</li>
-                            </ul>
-                        </li>
-                        <li className="list-group-item">
-                            <span className="title">4. Board</span>
-                            <ul className="list-group list-group-flush">
-                                <li className="list-group-item">4 (a). Thrown Card</li>
-                            </ul>
-                        </li>
-                        <li className="list-group-item">
-                            <span className="title">5. Draw Pile</span>
-                            <ul className="list-group list-group-flush">
-                                <li className="list-group-item">5 (a). Avaiable Card Count</li>
-                            </ul>
-                        </li>
-                        <li className="list-group-item">
-                            <span className="title">6. Discard Pile</span>
-                            <ul className="list-group list-group-flush">
-                                <li className="list-group-item">6 (a). Discarded card count</li>
-                            </ul>
-                        </li>
-                    </ul>
+                    <div className="hint-container col-12">
+                        <a  href={GameHint} target="_blank"><img
+                            className="game-hint"
+                            src={GameHint}
+                            alt="Game Hint"
+                        />
+                        </a>
+                    </div>
                 </div>
             </div>
         );

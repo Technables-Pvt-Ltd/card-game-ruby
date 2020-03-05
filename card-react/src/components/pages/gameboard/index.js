@@ -69,11 +69,7 @@ export class Board extends Component {
             );
 
             this.timeout = setTimeout(async () => {
-
                 this.initCardEffectApply(cardid, playerid, response);
-
-
-
             }, 500);
 
 
@@ -243,9 +239,7 @@ export class Board extends Component {
 
         this.setState({ resetTime: !this.state.resetTime })
         await this.getGameData(false);
-       // await this.moveToNextPlayer(gamecode, currentPlayerid);
-
-
+       
     }
 
 
@@ -267,9 +261,6 @@ export class Board extends Component {
 
         this.gameChannel = null;
 
-        // this.props.dispatch(gameactionlist.gamestart({
-        //   roomId: this.roomId, lobbyChannel: this.lobbyChannel, gameChannel: this.gameChannel, isPlaying: false, isDisabled: false
-        // }));
     };
 
     getGameData = async isFirstLoad => {
@@ -372,15 +363,9 @@ export class Board extends Component {
                 this.refreshCount = 0;
                 this.setPlayertimeout = setTimeout(async () => {
                     await this.moveToNextPlayer(this.roomId, this.currentPlayerid);
-
-
-                    
                 }, 30000);
-                // this.setState({ isPlaying: true })
             }
         }
-
-
     };
 
     moveToNextPlayer = async (gamecode, currentPlayerid) => {
@@ -421,7 +406,6 @@ export class Board extends Component {
             rightPlayer
         } = this.props.cardgame;
         let tempPile = this.state.tempPile;
-        //if (this.props.cardgame.bottomPlayer) alert(this.props.cardgame.bottomPlayer.hand_pile.length);
         return (
             <Aux>
                 {this.state.complete && winnerdata && (
@@ -587,7 +571,6 @@ export class Board extends Component {
                             </div>
                         </div>
                         <div className="right-content d-flex flex-column">
-                            {/* <GameSymbols /> */}
                             <GameSymbols />
                             {this.state.resetTime && <CountDown resetTime={this.state.resetTime} />}
 

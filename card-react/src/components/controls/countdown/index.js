@@ -11,7 +11,6 @@ class CountDown extends React.Component {
 
   tick = () => {
     this.timeHandler = setInterval(async () => {
-      //debugger;
       let seconds = this.state.seconds - 1;
       if (seconds < 0)
         seconds = 30;

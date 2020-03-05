@@ -23,3 +23,8 @@
     color: #3b3b3b;
     cursor: initial;
 }
+
+.game-hint {
+    width: 400px;
+    cursor: pointer;
+}
