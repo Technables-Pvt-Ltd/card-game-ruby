@@ -97,26 +97,30 @@ So, we will need to run two projects seperately to play the game.
 ## Preview (screenshots)
 
 
-#### 2.1. Home
+#### 1. Home
 ![Web Home](resources/1.HomePage.png)
 
-#### 2.2. Choosing Deck
+#### 2. Choosing Deck
 ![Web Create](resources/2.CreateGame.png)
-#### 2.3. Game Create
+#### 3. Game Create
 ![Web_Game Create](resources/3.game-created.png)
-#### 2.4. Join game
+#### 4. Join game
 ![Web_Game Join](resources/4.joingame.png)
-#### 2.5. Player List
+#### 5. Player List
 ![Web_Player_List](resources/5.playerjoined.png)
-#### 2.6. Game Board
+#### 6. Game Board
 ![Web_Game Create](resources/6.gameboard.png)
+#### 7. Game Hint
+![Web_Game Create](resources/7.GameHint.png)
+#### 8. Game End
+![Web_Game Create](resources/8.GameEnd.png)
 
 
 ## Testing the Rails APIs
 
 **Step 1:** Navigate to Rails Project
   ```bash
-    $ cd boggle-api
+    $ cd card-ruby
   ```
 **Step 2:** Execute test
   ```bash
